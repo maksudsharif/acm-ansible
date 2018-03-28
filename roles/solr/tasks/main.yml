@@ -121,19 +121,30 @@
   notify: "start solr"
   when: solr_path.stat.exists == False
 
-- name: get file names to copy
+- name: Get Configset files to copy
   become: true
   become_user: "{{ solr_user }}"
   command: "find {{ solr_home }}/server/solr/configsets/_default -type f"
   register: configset_files
   when: solr_path.stat.exists == False
 
+- name: Create arkcase configset directories
+  become: true
+  become_user: "{{ solr_user }}"
+  file:
+    path: "{{ solr_home }}/server/solr/configsets/arkcase/conf"
+    owner: "{{ solr_user }}"
+    group: "{{ solr_group }}"
+    state: directory
+    mode: 0755
+    recurse: yes
+
 - name: Copy default configset to create new configset
   become: true
   become_user: "{{ solr_user }}"
   copy:
     src: "{{ item }}"
-    dest: "{{ solr_home }}/server/solr/configsets/arkcase"
+    dest: "{{ solr_home }}/server/solr/configsets/arkcase/"
     owner: "{{ solr_user }}"
     group: "{{ solr_group }}"
     remote_src: yes
