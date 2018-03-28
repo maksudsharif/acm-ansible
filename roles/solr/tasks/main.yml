@@ -145,7 +145,7 @@
 - name: Start Solr
   become: true
   become_user: root
-  shell: "service {{ solr_service }} start"
+  shell: "service {{ solr_service_name }} start"
   when: solr_path.stat.exists == False
 
 - name: Create ArkCase Solr Cores
