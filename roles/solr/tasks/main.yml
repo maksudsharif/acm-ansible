@@ -70,6 +70,8 @@
   when: install_path.stat.exists == False and solr_path.stat.exists == False
 
 - name: Extract Solr
+  become: true
+  become_user: webuser
   unarchive:
     src: "{{ tmp_dir }}/solr-{{ solr_version }}.tgz"
     dest: "{{ solr_install_dir }}"
