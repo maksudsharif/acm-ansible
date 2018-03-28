@@ -138,13 +138,14 @@
     state: directory
     mode: 0755
     recurse: yes
+  when: solr_path.stat.exists == False
 
 - name: Copy default configset to create new configset
   become: true
   become_user: "{{ solr_user }}"
   copy:
     src: "{{ item }}"
-    dest: "{{ solr_home }}/server/solr/configsets/arkcase/"
+    dest: "{{ solr_home }}/server/solr/configsets/arkcase/conf"
     owner: "{{ solr_user }}"
     group: "{{ solr_group }}"
     remote_src: yes
