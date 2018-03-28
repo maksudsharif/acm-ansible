@@ -145,7 +145,7 @@
 - name: Start Solr
   become: true
   become_user: root
-  service: { name: solr, state: restarted }
+  shell: "service {{ solr_service }} start"
   when: solr_path.stat.exists == False
 
 - name: Create ArkCase Solr Cores
@@ -154,11 +154,4 @@
   shell: "{{ solr_bin }} create -c {{ item }} -d {{ solr_home }}/server/solr/configsets/arkcase"
   with_items:
    - "{{ solr_cores }}"
-  when: solr_path.stat.exists == False
-
-- name: Restart Solr
-  command: echo Restarting Solr
-  become: true
-  become_user: root
-  notify: "restart solr"
   when: solr_path.stat.exists == False
