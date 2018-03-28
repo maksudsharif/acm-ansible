@@ -81,7 +81,7 @@
 
 - name: Create Symlink
   file:
-    path: "{{ solr_install_dir}}/solr-{{ solr_version }}"
+    src: "{{ solr_install_dir }}/solr-{{ solr_version }}"
     dest: "{{ solr_home }}"
     owner: "{{ solr_user }}"
     group: "{{ solr_group }}"
