@@ -16,10 +16,16 @@
   register: java_version
 - assert: { that: "java_version.stdout | version_compare('1.7', '>=')", msg: "Java must be present before being able to install Solr" }
 
+- name: Create the solr group
+  group:
+    name: "{{ solr_group }}"
+    state: present
+    system: yes
+
 - name: Create the solr user
   user:
     name: "{{ solr_user }}"
-    groups: "{{ solr_user }}"
+    groups: "{{ solr_group }}"
     append: yes
 
 - name: Check if the version of Solr already exists
@@ -45,7 +51,7 @@
     dest: "{{ solr_install_dir }}"
     copy: no
     owner: "{{ solr_user }}"
-    group: "{{ solr_user }}"
+    group: "{{ solr_group }}"
   when: solr_path.stat.exists == False
 
 - name: Create Symlink
@@ -53,7 +59,7 @@
     path: "{{ solr_install_dir}}/solr-{{ solr_version }}"
     dest: "{{ solr_home }}"
     owner: "{{ solr_user }}"
-    group: "{{ solr_user }}"
+    group: "{{ solr_group }}"
     state: link
   when: solr_path.stat.exists == False
 
@@ -73,7 +79,7 @@
     src: solr.in.sh.j2
     dest: "{{ solr_home }}/bin/solr.in.sh"
     owner: "{{ solr_user }}"
-    group: "{{ solr_user }}"
+    group: "{{ solr_group }}"
     mode: 0755
 
 - name: Start Solr
@@ -91,7 +97,7 @@
     src: "{{ item }}"
     dest: "{{ solr_home }}/server/solr/configsets/arkcase"
     owner: "{{ solr_user }}"
-    group: "{{ solr_user }}"
+    group: "{{ solr_group }}"
     remote_src: True
   with_items:
    - "{{ configset_files.stdout_lines }}"
@@ -101,7 +107,7 @@
     src: "{{ item }}"
     dest: "{{ solr_home }}/server/solr/configsets/arkcase/conf"
     owner: "{{ solr_user }}"
-    group: "{{ solr_user }}"
+    group: "{{ solr_group }}"
     mode: 0644
   with_items:
    - schema.xml
