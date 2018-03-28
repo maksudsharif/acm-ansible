@@ -76,7 +76,6 @@
     copy: no
     owner: "{{ solr_user }}"
     group: "{{ solr_group }}"
-    remote_src: yes
     creates: "{{ solr_install_dir }}"
   when: solr_path.stat.exists == False
 
