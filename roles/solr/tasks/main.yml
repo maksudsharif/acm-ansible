@@ -17,12 +17,16 @@
 - assert: { that: "java_version.stdout | version_compare('1.7', '>=')", msg: "Java must be present before being able to install Solr" }
 
 - name: Create the solr group
+  become: true
+  become_user: root
   group:
     name: "{{ solr_group }}"
     state: present
     system: yes
 
 - name: Create the solr user
+  beomce: true
+  become_user: root
   user:
     name: "{{ solr_user }}"
     groups: "{{ solr_group }}"
