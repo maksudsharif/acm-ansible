@@ -111,7 +111,8 @@
 
 - name: Create ArkCase Solr Cores
   shell: "{{ solr_bin }} create -c {{ item }} -d {{ solr_home }}/server/solr/configsets/arkcase"
-  with_items: {{ solr_cores }}
+  with_items:
+   - "{{ solr_cores }}"
 
 - name: Restart Solr
   become: true

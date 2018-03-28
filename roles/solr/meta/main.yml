@@ -1,24 +1,22 @@
 # file: roles/solr/meta/main.yml
 ---
 galaxy_info:
-  galaxy_info:
-    author: Maksud Sharif
-    description: Apache Solr for Linux.
-    company: "Armedia LLC"
-    license: "license (BSD, MIT)"
-    min_ansible_version: 2.2
-    platforms:
-      - name: EL
-        versions:
-        - 7
-    galaxy_tags:
-      - development
-      - solr
-      - search
-      - lucene
-      - container
-      - apache
-      - text
+  author: Maksud Sharif
+  description: Apache Solr for Linux.
+  company: "Armedia LLC"
+  license: "license (BSD, MIT)"
+  min_ansible_version: 2.2
+  platforms:
+    - name: EL
+      versions:
+      - 7
+  galaxy_tags:
+    - development
+    - solr
+    - search
+    - lucene
+    - container
+    - apache
+    - text
 
-  dependencies: []
-  version: 0.0.0
+dependencies: []
