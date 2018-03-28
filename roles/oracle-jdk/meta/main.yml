@@ -1,17 +1,25 @@
 # file: roles/oracle-jdk/meta/main.yml
 ---
 galaxy_info:
-  author: C. Ray Nagin
-  license: MIT
-  min_ansible_version: 1.4
+  author: Maksud Sharif
+  description: Deploy Oracle JDK
+  company: Armedia
+
+  license: GPLv2
+
+  min_ansible_version: 2.0
+
   platforms:
-    - name: Ubuntu
-      versions:
-        - trusty
-        - saucy
-        - precise
-        - lucid
-  categories:
-     - web
+  - name: EL
+    versions:
+    - 6
+    - 7
+
+  galaxy_tags:
+  - Java
+  - JDK
+  - Oracle
+  - EL
+
 dependencies: []
-version: 0.0.0
+version: 0.0.1

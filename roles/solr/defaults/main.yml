@@ -2,3 +2,19 @@
 ---
 #
 # foo: default
+
+solr_host: localhost
+solr_port: 8983
+solr_service_name: solr
+solr_user: webuser
+
+# SSL
+solr_ssl_enabled: false
+solr_ssl_key_store:
+solr_ssl_key_store_password:
+solr_ssl_key_store_type:
+solr_ssl_trust_store:
+solr_ssl_trust_store_password:
+solr_ssl_trust_store_type:
+solr_ssl_need_client_auth:
+solr_ssl_want_client_auth:

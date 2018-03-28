@@ -4,3 +4,17 @@
 # 
 # - name: restart ntpd
 #   service: name=ntpd state=restarted
+- name: reload systemd
+  systemd:
+    daemon_reload: yes
+
+- name: restart solr
+  service:
+    name: "{{ solr_service_name }}"
+    state: restarted
+    sleep: 5
+
+- name: start solr
+  service:
+    name: "{{ solr_service_name }}"
+    state: started

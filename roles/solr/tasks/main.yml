@@ -1,17 +1,119 @@
 # file: roles/solr/tasks/main.yml
 ---
-# For example,
-# 
-# - name: be sure ntp is installed
-#   yum: pkg=ntp state=installed
-#   tags: ntp
-# 
-# - name: be sure ntp is configured
-#   template: src=ntp.conf.j2 dest=/etc/ntp.conf
-#   notify:
-#     - restart ntpd
-#   tags: ntp
-# 
-# - name: be sure ntpd is running and enabled
-#   service: name=ntpd state=running enabled=yes
-#   tags: ntp
+
+- name: Ensure dependencies are installed.
+  package: name={{ item }} state=present
+  with_items:
+    - lsof
+    - acl
+    - sudo
+
+# Ensure Java 1.8+ is present
+- name: Ensure Java Installed
+  shell: java -version 2>&1 | grep version | awk '{print $3}' | sed 's/"//g'
+  register: java_version
+- assert: { that: "java_version.stdout | version_compare('1.7', '>=')", msg: "Java must be present before being able to install Solr" }
+
+- name: Create the solr user
+  user:
+    name: {{ solr_user }}
+    groups: {{ solr_user }}
+    append: yes
+
+- name: Check if the version of Solr already exists
+  stat:
+    path: "{{ solr_install_dir }}/solr-{{ solr_version }}"
+  register: solr_path
+
+- name: Check if Solr is downloaded
+  stat:
+    path: "{{ tmp_dir }}/solr-{{ solr_version }}.tgz"
+  register: solr_downloaded
+  when: solr_path.stat.exists == False
+
+- name: Download Solr
+  get_url:
+    url: "{{ solr_download_url }}"
+    dest: "{{ tmp_dir }}/solr-{{ solr_version }}.tgz"
+  when: solr_path.stat.exists == False and solr_downloaded.stat.exists == False
+
+- name: Extract Solr
+  unarchive:
+    src: "{{ tmp_dir }}/solr-{{ solr_version }}.tgz"
+    dest: "{{ solr_install_dir }}"
+    copy: no
+    owner: {{ solr_user }}
+    group: {{ solr_user }}
+  when: solr_path.stat.exists == False
+
+- name: Create Symlink
+  file:
+    path: "{{ solr_install_dir}}/solr-{{ solr_version }}"
+    dest: "{{ solr_home }}"
+    owner: {{ solr_user }}
+    group: {{ solr_user }}
+    state: link
+  when: solr_path.stat.exists == False
+
+- name: Install {{ solr_service_name} to /etc/init.d
+  template:
+    src: solr.j2
+    dest: "/etc/init.d/{{ solr_service_name }}"
+    owner: root
+    group: root
+    mode: 0744
+  become: true
+  become_user: root
+  when: solr_path.stat.exists == False
+
+- name: Install Solr Env to {{ solr_install_dir }}/{{ solr_service_name }}
+  template:
+    src: solr.in.sh.j2
+    dest: "{{ solr_home }}/bin/solr.in.sh"
+    owner: {{ solr_user }}
+    group: {{ solr_user }}
+    mode: 0755
+
+- name: Start Solr
+  become: true
+  become_user: root
+  notify: "start solr"
+
+- name: get file names to copy
+  command: "find {{ solr_home }}/server/solr/configsets/_default -type f"
+  register: configset_files
+
+- name: Copy default configset to create new configset
+  copy:
+    src: "{{ item }}"
+    dest: "{{ solr_home }}/server/solr/configsets/arkcase"
+    owner: {{ solr_user }}
+    group: {{ solr_user }}
+    remote_src: True
+  with_items:
+   - "{{ configset_files.stdout_lines }}"
+
+- name: Create ArkCase configset
+  copy:
+    src: "{{ item }}"
+    dest: "{{ solr_home }}/server/solr/configsets/arkcase/conf"
+    owner: {{ solr_user }}
+    group: {{ solr_user }}
+    mode: 0644
+  with_items:
+   - schema.xml
+   - solrconfig.xml
+
+- name: Delete default managed-schema
+  file:
+    path: "{{ solr_home }}/server/solr/configsets/arkcase/conf/managed-schema"
+    state: absent
+
+- name: Create ArkCase Solr Cores
+  shell: "{{ solr_bin }} create -c {{ item }} -d {{ solr_home }}/server/solr/configsets/arkcase"
+  with_items: {{ solr_cores }}
+
+- name: Restart Solr
+  become: true
+  become_user: root
+  notify: "restart solr"

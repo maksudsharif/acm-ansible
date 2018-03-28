@@ -1,4 +1,7 @@
 # file: inventory
 
-[all]
-rhel7.local
+[solr]
+acm-ansible ansible_become_pass=Jenova11
+
+[localhosts]
+localhost

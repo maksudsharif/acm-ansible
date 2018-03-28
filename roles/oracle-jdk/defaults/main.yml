@@ -1,4 +1,16 @@
 # file: roles/oracle-jdk/defaults/main.yml
+# defaults file for oracle-jdk
 ---
-#
-# foo: default
+
+# Download artifacts locally, allowing for faster deployment(copy) to multiple remote hosts
+deploy_via_local: true
+
+# Delete artifacts from remote host(s) (archives, rpm's, shell scripts, etc.)
+cleanup: true
+
+# Oracle JDK version, update subversion and build number
+# NOTE: You can get the build number by going to the jdk downlaod site, accepting the lincese and looking at the download url link
+java_version: 8
+java_update: 161
+java_build: 12
+java_arch: x64

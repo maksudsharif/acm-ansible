@@ -1,6 +1,7 @@
 # file: roles/oracle-jdk/vars/main.yml
 # vars file for oracle-jdk
 ---
+
 # Oracle JDK RPM name, as given by Oracle's download site
 jdk_rpm: "jdk-{{ java_version }}u{{ java_update }}-linux-{{ java_arch }}.rpm"
 # Oracle JDK download URL
