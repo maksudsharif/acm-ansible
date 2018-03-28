@@ -92,7 +92,7 @@
     state: link
   when: solr_path.stat.exists == False
 
-- name: Install {{ solr_service_name} to /etc/init.d
+- name: Install {{ solr_service_name }} to /etc/init.d
   template:
     src: solr.j2
     dest: "/etc/init.d/{{ solr_service_name }}"
