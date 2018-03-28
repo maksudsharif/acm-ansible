@@ -57,13 +57,16 @@
     dest: "{{ tmp_dir }}/solr-{{ solr_version }}.tgz"
   when: solr_path.stat.exists == False and solr_downloaded.stat.exists == False
 
-- name: Create {{ solr_install_dir }} if doesn't exist
+- name: Create {{ solr_install_dir }} if it doesn't exist
+  become: true
+  become_user: root
   file:
     path: "{{ solr_install_dir }}"
     state: directory
     owner: "{{ solr_user }}"
     group: "{{ solr_group }}"
     mode: 0755
+    recurse: yes
   when: install_path.stat.exists == False and solr_path.stat.exists == False
 
 - name: Extract Solr
