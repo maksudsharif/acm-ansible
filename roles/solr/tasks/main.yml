@@ -114,43 +114,10 @@
     mode: 0755
   when: solr_path.stat.exists == False
 
-- name: Start Solr
-  command: echo Starting Solr
-  become: true
-  become_user: root
-  notify: "start solr"
-  when: solr_path.stat.exists == False
-
-- name: Get Configset files to copy
-  become: true
-  become_user: "{{ solr_user }}"
-  command: "find {{ solr_home }}/server/solr/configsets/_default -type f"
-  register: configset_files
-  when: solr_path.stat.exists == False
-
-- name: Create arkcase configset directories
-  become: true
-  become_user: "{{ solr_user }}"
-  file:
-    path: "{{ solr_home }}/server/solr/configsets/arkcase/conf"
-    owner: "{{ solr_user }}"
-    group: "{{ solr_group }}"
-    state: directory
-    mode: 0755
-    recurse: yes
-  when: solr_path.stat.exists == False
-
 - name: Copy default configset to create new configset
   become: true
   become_user: "{{ solr_user }}"
-  copy:
-    src: "{{ item }}"
-    dest: "{{ solr_home }}/server/solr/configsets/arkcase/conf"
-    owner: "{{ solr_user }}"
-    group: "{{ solr_group }}"
-    remote_src: yes
-  with_items:
-   - "{{ configset_files.stdout_lines }}"
+  shell: "cp -Rpf {{ solr_home }}/server/solr/configsets/_default {{ solr_home }}/server/solr/configsets/arkcase"
   when: solr_path.stat.exists == False
 
 - name: Create ArkCase configset
@@ -173,6 +140,12 @@
   file:
     path: "{{ solr_home }}/server/solr/configsets/arkcase/conf/managed-schema"
     state: absent
+  when: solr_path.stat.exists == False
+
+- name: Start Solr
+  become: true
+  become_user: root
+  service: { name: solr, state: restarted }
   when: solr_path.stat.exists == False
 
 - name: Create ArkCase Solr Cores
