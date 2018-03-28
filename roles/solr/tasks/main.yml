@@ -75,6 +75,7 @@
     mode: 0755
 
 - name: Start Solr
+  command: echo Starting Solr
   become: true
   become_user: root
   notify: "start solr"
@@ -115,6 +116,7 @@
    - "{{ solr_cores }}"
 
 - name: Restart Solr
+  command: echo Restarting Solr
   become: true
   become_user: root
   notify: "restart solr"
