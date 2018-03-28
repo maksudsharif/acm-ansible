@@ -16,8 +16,8 @@
 
 - name: Create the solr user
   user:
-    name: {{ solr_user }}
-    groups: {{ solr_user }}
+    name: "{{ solr_user }}"
+    groups: "{{ solr_user }}"
     append: yes
 
 - name: Check if the version of Solr already exists
@@ -42,16 +42,16 @@
     src: "{{ tmp_dir }}/solr-{{ solr_version }}.tgz"
     dest: "{{ solr_install_dir }}"
     copy: no
-    owner: {{ solr_user }}
-    group: {{ solr_user }}
+    owner: "{{ solr_user }}"
+    group: "{{ solr_user }}"
   when: solr_path.stat.exists == False
 
 - name: Create Symlink
   file:
     path: "{{ solr_install_dir}}/solr-{{ solr_version }}"
     dest: "{{ solr_home }}"
-    owner: {{ solr_user }}
-    group: {{ solr_user }}
+    owner: "{{ solr_user }}"
+    group: "{{ solr_user }}"
     state: link
   when: solr_path.stat.exists == False
 
@@ -70,8 +70,8 @@
   template:
     src: solr.in.sh.j2
     dest: "{{ solr_home }}/bin/solr.in.sh"
-    owner: {{ solr_user }}
-    group: {{ solr_user }}
+    owner: "{{ solr_user }}"
+    group: "{{ solr_user }}"
     mode: 0755
 
 - name: Start Solr
@@ -87,8 +87,8 @@
   copy:
     src: "{{ item }}"
     dest: "{{ solr_home }}/server/solr/configsets/arkcase"
-    owner: {{ solr_user }}
-    group: {{ solr_user }}
+    owner: "{{ solr_user }}"
+    group: "{{ solr_user }}"
     remote_src: True
   with_items:
    - "{{ configset_files.stdout_lines }}"
@@ -97,8 +97,8 @@
   copy:
     src: "{{ item }}"
     dest: "{{ solr_home }}/server/solr/configsets/arkcase/conf"
-    owner: {{ solr_user }}
-    group: {{ solr_user }}
+    owner: "{{ solr_user }}"
+    group: "{{ solr_user }}"
     mode: 0644
   with_items:
    - schema.xml
