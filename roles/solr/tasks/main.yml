@@ -71,7 +71,7 @@
 
 - name: Extract Solr
   become: true
-  become_user: {{ solr_user }}
+  become_user: "{{ solr_user }}"
   unarchive:
     src: "{{ tmp_dir }}/solr-{{ solr_version }}.tgz"
     dest: "{{ solr_install_dir }}"
@@ -83,7 +83,7 @@
 
 - name: Create Symlink
   become: true
-  become_user: {{ solr_user }}
+  become_user: "{{ solr_user }}"
   file:
     src: "{{ solr_install_dir }}/solr-{{ solr_version }}"
     dest: "{{ solr_home }}"
@@ -105,7 +105,7 @@
 
 - name: Install Solr Env to {{ solr_install_dir }}/{{ solr_service_name }}
   become: true
-  become_user: {{ solr_user }}
+  become_user: "{{ solr_user }}"
   template:
     src: solr.in.sh.j2
     dest: "{{ solr_home }}/bin/solr.in.sh"
@@ -123,14 +123,14 @@
 
 - name: get file names to copy
   become: true
-  become_user: {{ solr_user }}
+  become_user: "{{ solr_user }}"
   command: "find {{ solr_home }}/server/solr/configsets/_default -type f"
   register: configset_files
   when: solr_path.stat.exists == False
 
 - name: Copy default configset to create new configset
   become: true
-  become_user: {{ solr_user }}
+  become_user: "{{ solr_user }}"
   copy:
     src: "{{ item }}"
     dest: "{{ solr_home }}/server/solr/configsets/arkcase"
@@ -143,7 +143,7 @@
 
 - name: Create ArkCase configset
   become: true
-  become_user: {{ solr_user }}
+  become_user: "{{ solr_user }}"
   copy:
     src: "{{ item }}"
     dest: "{{ solr_home }}/server/solr/configsets/arkcase/conf"
@@ -157,7 +157,7 @@
 
 - name: Delete default managed-schema
   become: true
-  become_user: {{ solr_user }}
+  become_user: "{{ solr_user }}"
   file:
     path: "{{ solr_home }}/server/solr/configsets/arkcase/conf/managed-schema"
     state: absent
@@ -165,7 +165,7 @@
 
 - name: Create ArkCase Solr Cores
   become: true
-  become_user: {{ solr_user }}
+  become_user: "{{ solr_user }}"
   shell: "{{ solr_bin }} create -c {{ item }} -d {{ solr_home }}/server/solr/configsets/arkcase"
   with_items:
    - "{{ solr_cores }}"
