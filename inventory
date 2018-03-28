@@ -1,7 +1,7 @@
 # file: inventory
 
 [solr]
-acm-ansible ansible_become_pass=Jenova11
+acm-ansible ansible_become_pass=
 
 [localhosts]
 localhost

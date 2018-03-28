@@ -3,6 +3,8 @@
 
 - name: Ensure dependencies are installed.
   package: name={{ item }} state=present
+  become: true
+  become_user: root
   with_items:
     - lsof
     - acl
