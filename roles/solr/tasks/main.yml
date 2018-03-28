@@ -16,6 +16,17 @@
   register: java_version
 - assert: { that: "java_version.stdout | version_compare('1.7', '>=')", msg: "Java must be present before being able to install Solr" }
 
+- name: Check if the version of Solr already exists
+  stat:
+    path: "{{ solr_install_dir }}/solr-{{ solr_version }}"
+  register: solr_path
+
+- name: Check if {{ solr_install_dir }} exists
+  stat:
+    path: "{{ solr_install_dir }}"
+  register: install_path
+  when: solr_path.stat.exists == False
+
 - name: Create the solr group
   become: true
   become_user: root
@@ -23,6 +34,7 @@
     name: "{{ solr_group }}"
     state: present
     system: yes
+  when: solr_path.stat.exists == False
 
 - name: Create the solr user
   become: true
@@ -31,11 +43,7 @@
     name: "{{ solr_user }}"
     groups: "{{ solr_group }}"
     append: yes
-
-- name: Check if the version of Solr already exists
-  stat:
-    path: "{{ solr_install_dir }}/solr-{{ solr_version }}"
-  register: solr_path
+  when: solr_path.stat.exists == False
 
 - name: Check if Solr is downloaded
   stat:
@@ -49,6 +57,15 @@
     dest: "{{ tmp_dir }}/solr-{{ solr_version }}.tgz"
   when: solr_path.stat.exists == False and solr_downloaded.stat.exists == False
 
+- name: Create {{ solr_install_dir }} if doesn't exist
+  file:
+    path: "{{ solr_install_dir }}"
+    state: directory
+    owner: "{{ solr_user }}"
+    group: "{{ solr_group }}"
+    mode: 0755
+  when: install_path.stat.exists == False and solr_path.stat.exists == False
+
 - name: Extract Solr
   unarchive:
     src: "{{ tmp_dir }}/solr-{{ solr_version }}.tgz"
@@ -56,6 +73,8 @@
     copy: no
     owner: "{{ solr_user }}"
     group: "{{ solr_group }}"
+    remote_src: yes
+    creates: "{{ solr_install_dir }}"
   when: solr_path.stat.exists == False
 
 - name: Create Symlink
@@ -85,16 +104,19 @@
     owner: "{{ solr_user }}"
     group: "{{ solr_group }}"
     mode: 0755
+  when: solr_path.stat.exists == False
 
 - name: Start Solr
   command: echo Starting Solr
   become: true
   become_user: root
   notify: "start solr"
+  when: solr_path.stat.exists == False
 
 - name: get file names to copy
   command: "find {{ solr_home }}/server/solr/configsets/_default -type f"
   register: configset_files
+  when: solr_path.stat.exists == False
 
 - name: Copy default configset to create new configset
   copy:
@@ -102,9 +124,10 @@
     dest: "{{ solr_home }}/server/solr/configsets/arkcase"
     owner: "{{ solr_user }}"
     group: "{{ solr_group }}"
-    remote_src: True
+    remote_src: yes
   with_items:
    - "{{ configset_files.stdout_lines }}"
+  when: solr_path.stat.exists == False
 
 - name: Create ArkCase configset
   copy:
@@ -116,19 +139,23 @@
   with_items:
    - schema.xml
    - solrconfig.xml
+  when: solr_path.stat.exists == False
 
 - name: Delete default managed-schema
   file:
     path: "{{ solr_home }}/server/solr/configsets/arkcase/conf/managed-schema"
     state: absent
+  when: solr_path.stat.exists == False
 
 - name: Create ArkCase Solr Cores
   shell: "{{ solr_bin }} create -c {{ item }} -d {{ solr_home }}/server/solr/configsets/arkcase"
   with_items:
    - "{{ solr_cores }}"
+  when: solr_path.stat.exists == False
 
 - name: Restart Solr
   command: echo Restarting Solr
   become: true
   become_user: root
   notify: "restart solr"
+  when: solr_path.stat.exists == False
