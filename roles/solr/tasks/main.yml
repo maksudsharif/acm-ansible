@@ -25,7 +25,7 @@
     system: yes
 
 - name: Create the solr user
-  beomce: true
+  become: true
   become_user: root
   user:
     name: "{{ solr_user }}"
