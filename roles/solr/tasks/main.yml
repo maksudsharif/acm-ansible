@@ -76,7 +76,7 @@
     copy: no
     owner: "{{ solr_user }}"
     group: "{{ solr_group }}"
-    creates: "{{ solr_install_dir }}"
+    creates: "{{ solr_install_dir }}/solr-{{ solr_version }}"
   when: solr_path.stat.exists == False
 
 - name: Create Symlink
