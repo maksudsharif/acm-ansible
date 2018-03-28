@@ -1,0 +1,12 @@
+# file: roles/oracle-jdk/vars/main.yml
+# vars file for oracle-jdk
+---
+# Oracle JDK RPM name, as given by Oracle's download site
+jdk_rpm: "jdk-{{ java_version }}u{{ java_update }}-linux-{{ java_arch }}.rpm"
+# Oracle JDK download URL
+jdk_url: "http://download.oracle.com/otn-pub/java/jdk/{{ java_version }}u{{ java_update }}-b{{ java_build }}/{{jdk_token}}/{{ jdk_rpm }}"
+# Oracle JDK RPM package version
+jdk_version: "1.{{ java_version }}.0_{{ java_update }}"
+# from java 8 update 121 Oracle requires an extra token in the URL, e.g. e9e7ea248e2c4826b92b3f075a80e441
+# use a blank string as default.
+jdk_token: "2f38c3b165be4555a1fa6e98c45e0808"

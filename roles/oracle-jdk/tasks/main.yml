@@ -1,0 +1,78 @@
+# file: roles/oracle-jdk/tasks/main.yml
+# tasks file for oracle-jdk
+---
+
+- name: Check if JDK {{ jdk_version }} is installed
+  shell: rpm -qa | egrep -q jdk.?{{ jdk_version }} || echo missing
+  register: jdk_check
+  changed_when: "'missing' in jdk_check.stdout"
+
+- name: Check if JDK {{ jdk_version }} is downloaded
+  stat: path=/tmp/{{ jdk_rpm }}
+  register: should_download
+
+- block:
+    - block:
+
+        - name: Download Oracle JDK {{ jdk_version }} on localhost
+          become: no
+          local_action: get_url
+            url={{ jdk_url }}
+            headers='Cookie:oraclelicense=accept-securebackup-cookie'
+            dest="{{ role_path }}/{{ jdk_rpm }}"
+          when: should_download.stat.exists == false
+
+        - name: Copy RPM to remote host(s)
+          copy:
+            src: "{{ role_path }}/{{ jdk_rpm }}"
+            dest: "/usr/local/src/{{ jdk_rpm }}"
+
+      when: deploy_via_local
+
+    - name: Download Oracle JDK {{ jdk_version }} on remote host(s)
+      get_url:
+        url={{ jdk_url }}
+        headers='Cookie:oraclelicense=accept-securebackup-cookie'
+        dest="/tmp/{{ jdk_rpm }}"
+      when: not deploy_via_local and should_download.stat.exists == false
+
+    - name: Install JDK
+      yum: name="/tmp/{{ jdk_rpm }}" state=present
+      become: true
+      become_user: root
+
+  when: jdk_check.stdout == "missing"
+
+- name: Link /usr/java/default
+  file: dest=/usr/java/default src="/usr/java/jdk{{ jdk_version }}" state=link
+  become: true
+  become_user: root
+
+- name: Alternatives link for "java"
+  alternatives: name=java link=/usr/bin/java  path=/usr/java/default/bin/java
+  become: true
+  become_user: root
+
+- name: Alternatives link for "javac"
+  alternatives: name=javac link=/usr/bin/javac  path=/usr/java/default/bin/javac
+  become: true
+  become_user: root
+
+- name: Alternatives link for "jar"
+  alternatives: name=jar link=/usr/bin/jar  path=/usr/java/default/bin/jar
+  become: true
+  become_user: root
+
+- name: Check if "java_sdk" target exists
+  stat: path=/usr/lib/jvm/java
+  register: sdk_check
+
+- name: Alternatives link for "java_sdk"
+  alternatives: name=java_sdk link=/usr/lib/jvm/java  path=/usr/java/default
+  become: true
+  become_user: root
+  when: sdk_check.stat.exists
+
+- name: Remove /tmp/{{ jdk_rpm }}
+  file: path="/tmp/{{ jdk_rpm }}" state=absent
+  when: cleanup

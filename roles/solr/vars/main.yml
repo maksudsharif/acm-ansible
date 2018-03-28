@@ -1,0 +1,4 @@
+# file: roles/solr/vars/main.yml
+---
+#
+# foo: bar
