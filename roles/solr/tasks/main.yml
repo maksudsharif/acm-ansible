@@ -9,9 +9,6 @@
     - lsof
     - acl
     - sudo
-    - grep
-    - awk
-    - sed
 
 # Ensure Java 1.8+ is present
 - name: Ensure Java Installed
