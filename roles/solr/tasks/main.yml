@@ -9,23 +9,22 @@
     - lsof
     - acl
     - sudo
+    - grep
+    - awk
+    - sed
 
 # Ensure Java 1.8+ is present
 - name: Ensure Java Installed
   shell: java -version 2>&1 | grep version | awk '{print $3}' | sed 's/"//g'
   register: java_version
-- assert: { that: "java_version.stdout | version_compare('1.7', '>=')", msg: "Java must be present before being able to install Solr" }
+- assert: { that: "java_version.stdout | version_compare('1.8', '>=')", msg: "Java must be present before being able to install Solr" }
 
+# Ensure no Solr of the same version exists
 - name: Check if the version of Solr already exists
   stat:
     path: "{{ solr_install_dir }}/solr-{{ solr_version }}"
   register: solr_path
-
-- name: Check if {{ solr_install_dir }} exists
-  stat:
-    path: "{{ solr_install_dir }}"
-  register: install_path
-  when: solr_path.stat.exists == False
+- assert: { that: "solr_path.stat.exists == False", msg: "Solr {{ solr_version }} is already installed." }
 
 - name: Create the solr group
   become: true
@@ -34,7 +33,6 @@
     name: "{{ solr_group }}"
     state: present
     system: yes
-  when: solr_path.stat.exists == False
 
 - name: Create the solr user
   become: true
@@ -43,19 +41,17 @@
     name: "{{ solr_user }}"
     groups: "{{ solr_group }}"
     append: yes
-  when: solr_path.stat.exists == False
 
 - name: Check if Solr is downloaded
   stat:
     path: "{{ tmp_dir }}/solr-{{ solr_version }}.tgz"
   register: solr_downloaded
-  when: solr_path.stat.exists == False
 
 - name: Download Solr
   get_url:
     url: "{{ solr_download_url }}"
     dest: "{{ tmp_dir }}/solr-{{ solr_version }}.tgz"
-  when: solr_path.stat.exists == False and solr_downloaded.stat.exists == False
+  when: solr_downloaded.stat.exists == False
 
 - name: Create {{ solr_install_dir }} if it doesn't exist
   become: true
@@ -67,7 +63,6 @@
     group: "{{ solr_group }}"
     mode: 0755
     recurse: yes
-  when: install_path.stat.exists == False and solr_path.stat.exists == False
 
 - name: Extract Solr
   become: true
@@ -79,7 +74,6 @@
     owner: "{{ solr_user }}"
     group: "{{ solr_group }}"
     creates: "{{ solr_install_dir }}/solr-{{ solr_version }}"
-  when: solr_path.stat.exists == False
 
 - name: Create Symlink
   become: true
@@ -90,35 +84,11 @@
     owner: "{{ solr_user }}"
     group: "{{ solr_group }}"
     state: link
-  when: solr_path.stat.exists == False
-
-- name: Install {{ solr_service_name }} to /etc/init.d
-  template:
-    src: solr.j2
-    dest: "/etc/init.d/{{ solr_service_name }}"
-    owner: root
-    group: root
-    mode: 0744
-  become: true
-  become_user: root
-  when: solr_path.stat.exists == False
-
-- name: Install Solr Env to {{ solr_install_dir }}/{{ solr_service_name }}
-  become: true
-  become_user: "{{ solr_user }}"
-  template:
-    src: solr.in.sh.j2
-    dest: "{{ solr_home }}/bin/solr.in.sh"
-    owner: "{{ solr_user }}"
-    group: "{{ solr_group }}"
-    mode: 0755
-  when: solr_path.stat.exists == False
 
 - name: Copy default configset to create new configset
   become: true
   become_user: "{{ solr_user }}"
   shell: "cp -Rpf {{ solr_home }}/server/solr/configsets/_default {{ solr_home }}/server/solr/configsets/arkcase"
-  when: solr_path.stat.exists == False
 
 - name: Create ArkCase configset
   become: true
@@ -132,7 +102,6 @@
   with_items:
    - schema.xml
    - solrconfig.xml
-  when: solr_path.stat.exists == False
 
 - name: Delete default managed-schema
   become: true
@@ -140,13 +109,27 @@
   file:
     path: "{{ solr_home }}/server/solr/configsets/arkcase/conf/managed-schema"
     state: absent
-  when: solr_path.stat.exists == False
-
-- name: Start Solr
+  
+- name: Install {{ solr_service_name }} to /etc/init.d
+  template:
+    src: solr.j2
+    dest: "/etc/init.d/{{ solr_service_name }}"
+    owner: root
+    group: root
+    mode: 0755
   become: true
   become_user: root
-  shell: "service {{ solr_service_name }} start"
-  when: solr_path.stat.exists == False
+
+- name: Install Solr Env to {{ solr_install_dir }}/{{ solr_service_name }}
+  become: true
+  become_user: "{{ solr_user }}"
+  template:
+    src: solr.in.sh.j2
+    dest: "{{ solr_home }}/bin/solr.in.sh"
+    owner: "{{ solr_user }}"
+    group: "{{ solr_group }}"
+    mode: 0755
+  notify: "Start Solr"  
 
 - name: Create ArkCase Solr Cores
   become: true
@@ -154,4 +137,3 @@
   shell: "{{ solr_bin }} create -c {{ item }} -d {{ solr_home }}/server/solr/configsets/arkcase"
   with_items:
    - "{{ solr_cores }}"
-  when: solr_path.stat.exists == False

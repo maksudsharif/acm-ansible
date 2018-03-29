@@ -2,7 +2,7 @@
 ---
 galaxy_info:
   author: Maksud Sharif
-  description: Apache Solr for Linux.
+  description: Apache Solr for ArkCase.
   company: "Armedia LLC"
   license: "license (BSD, MIT)"
   min_ansible_version: 2.2
@@ -11,11 +11,10 @@ galaxy_info:
       versions:
       - 7
   galaxy_tags:
-    - development
+    - arkcase
     - solr
     - search
     - lucene
-    - container
     - apache
     - text
 
