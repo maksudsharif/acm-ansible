@@ -3,7 +3,7 @@
 
 - name: Ensure dependencies are installed.
   package: name={{ item }} state=present
-  become: true
+  become: yes
   become_user: root
   with_items:
     - lsof
@@ -32,7 +32,7 @@
 
 # Ensure group exists
 - name: Create the solr group
-  become: true
+  become: yes
   become_user: root
   group:
     name: "{{ solr_group }}"
@@ -41,7 +41,7 @@
 
 # Ensure user exists
 - name: Create the solr user
-  become: true
+  become: yes
   become_user: root
   user:
     name: "{{ solr_user }}"
@@ -61,7 +61,7 @@
   when: solr_downloaded.stat.exists == False
 
 - name: Create {{ solr_install_dir }} if it doesn't exist
-  become: true
+  become: yes
   become_user: root
   file:
     path: "{{ solr_install_dir }}"
@@ -72,7 +72,7 @@
     recurse: yes
 
 - name: Extract Solr
-  become: true
+  become: yes
   become_user: "{{ solr_user }}"
   unarchive:
     src: "{{ tmp_dir }}/solr-{{ solr_version }}.tgz"
@@ -83,7 +83,7 @@
     creates: "{{ solr_install_dir }}/solr-{{ solr_version }}"
 
 - name: Create Symlink
-  become: true
+  become: yes
   become_user: "{{ solr_user }}"
   file:
     src: "{{ solr_install_dir }}/solr-{{ solr_version }}"
@@ -93,12 +93,12 @@
     state: link
 
 - name: Copy default configset to create new configset
-  become: true
+  become: yes
   become_user: "{{ solr_user }}"
   shell: "cp -Rpf {{ solr_home }}/server/solr/configsets/_default {{ solr_home }}/server/solr/configsets/arkcase"
 
 - name: Create ArkCase configset
-  become: true
+  become: yes
   become_user: "{{ solr_user }}"
   copy:
     src: "{{ item }}"
@@ -111,7 +111,7 @@
     - solrconfig.xml
 
 - name: Delete default managed-schema
-  become: true
+  become: yes
   become_user: "{{ solr_user }}"
   file:
     path: "{{ solr_home }}/server/solr/configsets/arkcase/conf/managed-schema"
@@ -124,11 +124,11 @@
     owner: root
     group: root
     mode: 0755
-  become: true
+  become: yes
   become_user: root
 
 - name: Install Solr Env to {{ solr_install_dir }}/{{ solr_service_name }}
-  become: true
+  become: yes
   become_user: "{{ solr_user }}"
   template:
     src: solr.in.sh.j2
@@ -136,11 +136,29 @@
     owner: "{{ solr_user }}"
     group: "{{ solr_group }}"
     mode: 0755
-  notify: "Start Solr"
+
+- name: Start {{ solr_service_name }}
+  shell: "service {{ solr_service_name }} start"
+  become: yes
+  become_user: root
 
 - name: Create ArkCase Solr Cores
-  become: true
+  become: yes
   become_user: "{{ solr_user }}"
   shell: "{{ solr_bin }} create -c {{ item }} -d {{ solr_home }}/server/solr/configsets/arkcase"
   with_items:
     - "{{ solr_cores }}"
+
+- name: Expose {{ solr_port }}
+  become: yes
+  become_user: root
+  firewalld:
+    port: "{{ solr_port }}/tcp"
+    permanent: true
+    zone: public
+    state: enabled
+
+- name: Reload firewalld
+  command: firewall-cmd --reload
+  become: yes
+  become_user: root
