@@ -26,7 +26,7 @@
 # Ensure Solr service doesn't exist
 - name: Check if Solr {{ solr_version }} service exists
   stat:
-    path: "/etc/init.d/{{ solr_service }}"
+    path: "/etc/init.d/{{ solr_service_name }}"
   register: solr_service_path
 - assert: { that: "solr_service_path.stat.exists == False", msg: "Solr {{ solr_version }} service is already installed" }
 
