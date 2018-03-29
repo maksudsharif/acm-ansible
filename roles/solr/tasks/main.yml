@@ -23,6 +23,14 @@
   register: solr_path
 - assert: { that: "solr_path.stat.exists == False", msg: "Solr {{ solr_version }} is already installed." }
 
+# Ensure Solr service doesn't exist
+- name: Check if Solr {{ solr_version }} service exists
+  stat:
+    path: "/etc/init.d/{{ solr_service }}"
+  register: solr_service_path
+- assert: { that: "solr_service_path.stat.exists == False", msg: "Solr {{ solr_version }} service is already installed" }
+
+# Ensure group exists
 - name: Create the solr group
   become: true
   become_user: root
@@ -31,6 +39,7 @@
     state: present
     system: yes
 
+# Ensure user exists
 - name: Create the solr user
   become: true
   become_user: root
@@ -39,6 +48,7 @@
     groups: "{{ solr_group }}"
     append: yes
 
+# Don't re-download Solr distribution
 - name: Check if Solr is downloaded
   stat:
     path: "{{ tmp_dir }}/solr-{{ solr_version }}.tgz"
@@ -97,8 +107,8 @@
     group: "{{ solr_group }}"
     mode: 0644
   with_items:
-   - schema.xml
-   - solrconfig.xml
+    - schema.xml
+    - solrconfig.xml
 
 - name: Delete default managed-schema
   become: true
@@ -106,7 +116,7 @@
   file:
     path: "{{ solr_home }}/server/solr/configsets/arkcase/conf/managed-schema"
     state: absent
-  
+
 - name: Install {{ solr_service_name }} to /etc/init.d
   template:
     src: solr.j2
@@ -126,11 +136,11 @@
     owner: "{{ solr_user }}"
     group: "{{ solr_group }}"
     mode: 0755
-  notify: "Start Solr"  
+  notify: "Start Solr"
 
 - name: Create ArkCase Solr Cores
   become: true
   become_user: "{{ solr_user }}"
   shell: "{{ solr_bin }} create -c {{ item }} -d {{ solr_home }}/server/solr/configsets/arkcase"
   with_items:
-   - "{{ solr_cores }}"
+    - "{{ solr_cores }}"
