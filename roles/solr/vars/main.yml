@@ -28,7 +28,12 @@ solr_ssl_trust_store_password:
 solr_ssl_trust_store_type:
 solr_ssl_need_client_auth:
 solr_ssl_want_client_auth:
-
-# Expressions
-true_exp: "{{ 'true' | bool }}"
-false_exp: "{{ 'false' | bool }}"
+ssl_vars:
+  - solr_ssl_key_store
+  - solr_ssl_key_store_password
+  - solr_ssl_key_store_type
+  - solr_ssl_trust_store
+  - solr_ssl_trust_store_password
+  - solr_ssl_trust_store_type
+  - solr_ssl_need_client_auth
+  - solr_ssl_want_client_auth

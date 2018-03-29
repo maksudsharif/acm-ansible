@@ -30,6 +30,10 @@
   register: solr_service_path
 - assert: { that: "solr_service_path.stat.exists == False", msg: "Solr {{ solr_version }} service is already installed" }
 
+# Validate SSL properties
+- assert: { that: "({{ ssl_vars | join(' is defined and ') }}) ", msg: "Solr SSL enabled, but properties not present."}
+  when: solr_ssl_enabled == 'true'
+
 # Ensure group exists
 - name: Create the solr group
   become: yes
