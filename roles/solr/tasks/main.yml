@@ -1,7 +1,40 @@
 # file: roles/solr/tasks/main.yml
 ---
 # Pre installation checks
-- include_tasks: pre.yml
+- name: Ensure dependencies are installed.
+  package: name={{ item }} state=present
+  become: yes
+  become_user: root
+  with_items:
+    - lsof
+    - acl
+    - sudo
+
+# Ensure Java 1.8+ is present
+- name: Ensure Java Installed
+  shell: java -version 2>&1 | grep version | awk '{print $3}' | sed 's/"//g'
+  register: java_version
+- assert: { that: "java_version.stdout | version_compare('1.8', '>=')", msg: "Java must be present before being able to install Solr" }
+
+# Ensure no Solr of the same version exists
+- name: Check if the version of Solr already exists
+  stat:
+    path: "{{ solr_install_dir }}/solr-{{ solr_version }}"
+  register: solr_path
+
+# Ensure Solr service doesn't exist
+- name: Check if Solr {{ solr_version }} service exists
+  stat:
+    path: "/etc/init.d/{{ solr_service_name }}"
+  register: solr_service_path
+
+- debug:
+    msg: "Solr {{ solr_version }} is already installed"
+  when: solr_path.stat.exists == True or solr_service_path.stat.exists == True
+
+- name: End installation attempt if Solr {{ solr_version }} exists
+  meta: end_play
+  when: solr_path.stat.exists == True or solr_service_path.stat.exists == True
   
 # Ensure group exists
 - name: Create the solr group
@@ -34,13 +67,124 @@
   when: solr_downloaded.stat.exists == False
 
 # Extract downloaded file to install dir and create sym-link
-- import_tasks: extract.yml
+- name: Check if extraction ran previously...
+  stat:
+    path: "/root/{{ solr_service_name }}/solr7-extract.txt"
+  register: extract_step
+
+- name: "Extract Solr {{ solr_version }}"
+  block:
+    - name: Create {{ solr_install_dir }} if it doesn't exist
+      become: yes
+      become_user: root
+      file:
+      path: "{{ solr_install_dir }}"
+      state: directory
+      owner: "{{ solr_user }}"
+      group: "{{ solr_group }}"
+      mode: 0755
+      recurse: yes
+
+    - name: Extract Solr to {{ solr_install_dir }}/solr-{{ solr_version }}
+      become: yes
+      become_user: "{{ solr_user }}"
+      unarchive:
+        src: "{{ tmp_dir }}/solr-{{ solr_version }}.tgz"
+        dest: "{{ solr_install_dir }}"
+        copy: no
+        owner: "{{ solr_user }}"
+        group: "{{ solr_group }}"
+        creates: "{{ solr_install_dir }}/solr-{{ solr_version }}"
+
+    - name: Create Symlink  {{ solr_install_dir }}/solr-{{ solr_version }} => {{ solr_home }}
+      become: yes
+      become_user: "{{ solr_user }}"
+      file:
+        src: "{{ solr_install_dir }}/solr-{{ solr_version }}"
+        dest: "{{ solr_home }}"
+        owner: "{{ solr_user }}"
+        group: "{{ solr_group }}"
+        state: link
+
+    - name: Write extract-solr step
+      shell: "mkdir -p /root/{{ solr_service_name }} && echo solr7-extract > /root/{{ solr_service_name }}/solr7-extract.txt"
+      become: yes
+      become_user: root
+  when: extract_step.stat.exists == False
+
 
 # Create ArkCase Solr configset for Cores
-- import_tasks: configset.yml
+- name: Check if 'configset' ran previously...
+  stat:
+    path: "/root/{{ solr_service_name }}/solr7-configset.txt"
+  register: configset_step
+
+- name: Create ArkCase configset
+  block:
+    - name: Copy _default configset to create new configset
+      become: yes
+      become_user: "{{ solr_user }}"
+      shell: "cp -Rpf {{ solr_home }}/server/solr/configsets/_default {{ solr_home }}/server/solr/configsets/arkcase"
+
+    - name: Create ArkCase configset
+      become: yes
+      become_user: "{{ solr_user }}"
+      copy:
+        src: "{{ item }}"
+        dest: "{{ solr_home }}/server/solr/configsets/arkcase/conf"
+        owner: "{{ solr_user }}"
+        group: "{{ solr_group }}"
+        mode: 0644
+      with_items:
+        - schema.xml
+        - solrconfig.xml
+
+    - name: Delete default managed-schema
+      become: yes
+      become_user: "{{ solr_user }}"
+      file:
+        path: "{{ solr_home }}/server/solr/configsets/arkcase/conf/managed-schema"
+        state: absent
+
+    - name: Write configset step
+      shell: "mkdir -p /root/{{ solr_service_name }} && echo solr7-configset > /root/{{ solr_service_name }}/solr7-configset.txt"
+      become: yes
+      become_user: root
+  when: configset_step.stat.exists == False
 
 # Install Solr service
-- import_tasks: install-service.yml
+- name: Check if 'firewall' ran previously...
+  stat:
+    path: "/root/{{ solr_service_name }}/solr7-install-service.txt"
+  register: install_service_step
+
+- name: Install Solr {{ solr_version }} service
+  block:
+    - name: "Install {{ solr_service_name }} to /etc/init.d"
+      template:
+        src: solr.j2
+        dest: "/etc/init.d/{{ solr_service_name }}"
+        owner: root
+        group: root
+        mode: 0755
+      become: yes
+      become_user: root
+
+    - name: "Install Solr Env to {{ solr_install_dir }}/{{ solr_service_name }}"
+      become: yes
+      become_user: "{{ solr_user }}"
+      template:
+        src: solr.in.sh.j2
+        dest: "{{ solr_home }}/bin/solr.in.sh"
+        owner: "{{ solr_user }}"
+        group: "{{ solr_group }}"
+        mode: 0755
+
+    - name: Write install-service step
+      shell: "mkdir -p /root/{{ solr_service_name }} && echo solr7-install-service > /root/{{ solr_service_name }}/solr7-install-service.txt"
+      become: yes
+      become_user: root
+  when: install_service_step.stat.exists == False
 
 - name: Start {{ solr_service_name }}
   shell: "service {{ solr_service_name }} start"
@@ -48,12 +192,53 @@
   become_user: root
 
 # Create ArkCase cores
-- include_tasks: cores.yml
-  when: solr_create_cores == true
+- name: Check if 'cores' ran previously...
+  stat:
+    path: "/root/{{ solr_service_name }}/solr7-cores.txt"
+  register: cores_step
+
+- name: Create ArkCase Solr cores
+  block:
+    - name: Create ArkCase Solr Cores
+      become: yes
+      become_user: "{{ solr_user }}"
+      shell: "{{ solr_bin }} create -c {{ item }} -d {{ solr_home }}/server/solr/configsets/arkcase"
+      with_items:
+        - "{{ solr_cores }}"
+
+    - name: Write cores step
+      shell: "mkdir -p /root/{{ solr_service_name }} && echo solr7-cores > /root/{{ solr_service_name }}/solr7-cores.txt"
+      become: yes
+      become_user: root
+  when: cores_step.stat.exists == False and solr_create_cores == true
 
 # Expose required ports for solr
-- include_tasks: firewall.yml
-  when: firewall_expose_ports == true
+- name: Check if 'firewall' ran previously...
+  stat:
+    path: "/root/{{ solr_service_name }}/solr7-firewall.txt"
+  register: firewall_step
+
+- name: Expose ports for Solr
+  block:
+    - name: "Expose {{ solr_port }}"
+      become: yes
+      become_user: root
+      firewalld:
+        port: "{{ solr_port }}/tcp"
+        permanent: true
+        zone: "{{ firewall_default_zone }}"
+        state: enabled
+
+    - name: Reload firewalld
+      command: firewall-cmd --reload
+      become: yes
+      become_user: root
+
+    - name: Write firewall step
+      shell: "mkdir -p /root/{{ solr_service_name }} && echo solr7-firewall > /root/{{ solr_service_name }}/solr7-firewall.txt"
+      become: yes
+      become_user: root
+  when: firewall_step.stat.exists == False and firewall_expose_ports == true
 
 - name: Check Solr {{ solr_version }} PID
   shell: "cat {{ solr_home }}/bin/solr-{{ solr_port }}.pid | awk '{if(NR<2)print}'"
