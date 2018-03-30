@@ -1,1 +1,3 @@
 ---
+- debug:
+    msg: "Uninstall of Solr {{ solr_version_old }} requested..."

@@ -1,5 +1,10 @@
 # Install Solr service
 ---
+- name: Check if 'firewall' ran previously...
+  stat:
+    path: "/root/{{ solr_service_name }}/solr7-install-service.txt"
+  register: install_service_step
+
 - name: Install Solr {{ solr_version }} service
   block:
     - name: Install {{ solr_service_name }} to /etc/init.d
@@ -26,4 +31,4 @@
       shell: "mkdir -p /root/{{ solr_service_name }} && echo solr7-install-service > /root/{{ solr_service_name }}/solr7-install-service.txt"
       become: yes
       become_user: root 
-  creates: "/root/{{ solr_service_name}}/solr7-install-service.txt"
+  when: install_service_step.stat.exists == False

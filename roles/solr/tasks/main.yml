@@ -51,19 +51,9 @@
 - include: cores.yml
   when: solr_create_cores == true
 
-- name: Expose {{ solr_port }}
-  become: yes
-  become_user: root
-  firewalld:
-    port: "{{ solr_port }}/tcp"
-    permanent: true
-    zone: "{{ firewall_default_zone }}"
-    state: enabled
-
-- name: Reload firewalld
-  command: firewall-cmd --reload
-  become: yes
-  become_user: root
+# Expose required ports for solr
+- include: firewall.yml
+  when: firewall_expose_ports == true
 
 - name: Check Solr {{ solr_version }} PID
   shell: "cat {{ solr_home }}/bin/solr-{{ solr_port }}.pid | awk '{if(NR<2)print}'"

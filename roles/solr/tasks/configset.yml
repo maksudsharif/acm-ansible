@@ -1,5 +1,10 @@
 # Create ArkCase Solr configset
 ---
+- name: Check if 'configset' ran previously...
+  stat:
+    path: "/root/{{ solr_service_name }}/solr7-configset.txt"
+  register: configset_step
+
 - name: Create ArkCase configset
   block:
     - name: Copy _default configset to create new configset
@@ -31,4 +36,4 @@
       shell: "mkdir -p /root/{{ solr_service_name }} && echo solr7-configset > /root/{{ solr_service_name }}/solr7-configset.txt"
       become: yes
       become_user: root 
-  creates: "/root/{{ solr_service_name}}/solr7-configset.txt"
+  when: configset_step.stat.exists == False

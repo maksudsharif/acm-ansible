@@ -1,5 +1,10 @@
 # Create ArkCase solr cores
 ---
+- name: Check if 'cores' ran previously...
+  stat:
+    path: "/root/{{ solr_service_name }}/solr7-cores.txt"
+  register: cores_step
+
 - name: Create ArkCase Solr cores
   block:
     - name: Create ArkCase Solr Cores
@@ -13,4 +18,4 @@
       shell: "mkdir -p /root/{{ solr_service_name }} && echo solr7-cores > /root/{{ solr_service_name }}/solr7-cores.txt"
       become: yes
       become_user: root
-  creates: "/root/{{ solr_service_name }}/solr7-cores.txt"
+  when: cores_step.stat.exists == False

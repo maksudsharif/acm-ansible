@@ -1,5 +1,9 @@
 # Extracts downloaded Solr Distribution
 ---
+- name: Check if extraction ran previously...
+  stat:
+    path: "/root/{{ solr_service_name }}/solr7-extract.txt"
+  register: extract_step
 - name: Extract Solr {{ solr_version }}
   block:
     - name: Create {{ solr_install_dir }} if it doesn't exist
@@ -38,4 +42,4 @@
       shell: "mkdir -p /root/{{ solr_service_name }} && echo solr7-extract > /root/{{ solr_service_name }}/solr7-extract.txt"
       become: yes
       become_user: root
-  creates: "/root/{{ solr_service_name }}/solr7-extract.txt"
+  when: extract_step.stat.exists == False

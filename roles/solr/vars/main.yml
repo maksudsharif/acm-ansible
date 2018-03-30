@@ -2,7 +2,9 @@
 # vars file for solr
 ---
 tmp_dir: /tmp
-default_firewall_zone: public
+firewall_default_zone: public
+firewall_expose_ports: true
+
 
 solr_host: localhost
 solr_port: 8983
