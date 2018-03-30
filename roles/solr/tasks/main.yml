@@ -1,47 +1,8 @@
 # file: roles/solr/tasks/main.yml
 ---
-
-- name: Ensure dependencies are installed.
-  package: name={{ item }} state=present
-  become: yes
-  become_user: root
-  with_items:
-    - lsof
-    - acl
-    - sudo
-
-# Ensure Java 1.8+ is present
-- name: Ensure Java Installed
-  shell: java -version 2>&1 | grep version | awk '{print $3}' | sed 's/"//g'
-  register: java_version
-- assert: { that: "java_version.stdout | version_compare('1.8', '>=')", msg: "Java must be present before being able to install Solr" }
-
-# Ensure no Solr of the same version exists
-- name: Check if the version of Solr already exists
-  stat:
-    path: "{{ solr_install_dir }}/solr-{{ solr_version }}"
-  register: solr_path
-
-- fail:
-    msg: "Solr {{ solr_version }} is already installed"
-  when: solr_path.stat.exists == True
-
-# Ensure Solr service doesn't exist
-- name: Check if Solr {{ solr_version }} service exists
-  stat:
-    path: "/etc/init.d/{{ solr_service_name }}"
-  register: solr_service_path
-
-- fail:
-    msg: "Solr {{ solr_version }} service already exists in /etc/init.d"
-  when: solr_service_path.stat.exists == True
-
-# Validate SSL properties
-- fail:
-    msg: "SSL is enabled, but variable '{{ item }}' is not defined or empty"
-  when: solr_ssl_enabled == true and not((item is undefined) or (item is none) or (item | trim == ''))
-  with_items: "{{ ssl_vars }}"
-
+# Pre installation checks
+- include: pre.yml
+  
 # Ensure group exists
 - name: Create the solr group
   become: yes
@@ -72,94 +33,23 @@
     dest: "{{ tmp_dir }}/solr-{{ solr_version }}.tgz"
   when: solr_downloaded.stat.exists == False
 
-- name: Create {{ solr_install_dir }} if it doesn't exist
-  become: yes
-  become_user: root
-  file:
-    path: "{{ solr_install_dir }}"
-    state: directory
-    owner: "{{ solr_user }}"
-    group: "{{ solr_group }}"
-    mode: 0755
-    recurse: yes
+# Extract downloaded file to install dir and create sym-link
+- include: extract.yml
 
-- name: Extract Solr to {{ solr_install_dir }}/solr-{{ solr_version }}
-  become: yes
-  become_user: "{{ solr_user }}"
-  unarchive:
-    src: "{{ tmp_dir }}/solr-{{ solr_version }}.tgz"
-    dest: "{{ solr_install_dir }}"
-    copy: no
-    owner: "{{ solr_user }}"
-    group: "{{ solr_group }}"
-    creates: "{{ solr_install_dir }}/solr-{{ solr_version }}"
+# Create ArkCase Solr configset for Cores
+- include: configset.yml    
 
-- name: Create Symlink  {{ solr_install_dir }}/solr-{{ solr_version }} => {{ solr_home }}
-  become: yes
-  become_user: "{{ solr_user }}"
-  file:
-    src: "{{ solr_install_dir }}/solr-{{ solr_version }}"
-    dest: "{{ solr_home }}"
-    owner: "{{ solr_user }}"
-    group: "{{ solr_group }}"
-    state: link
-
-- name: Copy _default configset to create new configset
-  become: yes
-  become_user: "{{ solr_user }}"
-  shell: "cp -Rpf {{ solr_home }}/server/solr/configsets/_default {{ solr_home }}/server/solr/configsets/arkcase"
-
-- name: Create ArkCase configset
-  become: yes
-  become_user: "{{ solr_user }}"
-  copy:
-    src: "{{ item }}"
-    dest: "{{ solr_home }}/server/solr/configsets/arkcase/conf"
-    owner: "{{ solr_user }}"
-    group: "{{ solr_group }}"
-    mode: 0644
-  with_items:
-    - schema.xml
-    - solrconfig.xml
-
-- name: Delete default managed-schema
-  become: yes
-  become_user: "{{ solr_user }}"
-  file:
-    path: "{{ solr_home }}/server/solr/configsets/arkcase/conf/managed-schema"
-    state: absent
-
-- name: Install {{ solr_service_name }} to /etc/init.d
-  template:
-    src: solr.j2
-    dest: "/etc/init.d/{{ solr_service_name }}"
-    owner: root
-    group: root
-    mode: 0755
-  become: yes
-  become_user: root
-
-- name: Install Solr Env to {{ solr_install_dir }}/{{ solr_service_name }}
-  become: yes
-  become_user: "{{ solr_user }}"
-  template:
-    src: solr.in.sh.j2
-    dest: "{{ solr_home }}/bin/solr.in.sh"
-    owner: "{{ solr_user }}"
-    group: "{{ solr_group }}"
-    mode: 0755
+# Install Solr service
+- include: install-service.yml
 
 - name: Start {{ solr_service_name }}
   shell: "service {{ solr_service_name }} start"
   become: yes
   become_user: root
 
-- name: Create ArkCase Solr Cores
-  become: yes
-  become_user: "{{ solr_user }}"
-  shell: "{{ solr_bin }} create -c {{ item }} -d {{ solr_home }}/server/solr/configsets/arkcase"
-  with_items:
-    - "{{ solr_cores }}"
+# Create ArkCase cores
+- include: cores.yml
+  when: solr_create_cores == true
 
 - name: Expose {{ solr_port }}
   become: yes
@@ -167,10 +57,26 @@
   firewalld:
     port: "{{ solr_port }}/tcp"
     permanent: true
-    zone: public
+    zone: "{{ firewall_default_zone }}"
     state: enabled
 
 - name: Reload firewalld
   command: firewall-cmd --reload
   become: yes
   become_user: root
+
+- name: Check Solr {{ solr_version }} PID
+  shell: "cat {{ solr_home }}/bin/solr-{{ solr_port }}.pid | awk '{if(NR<2)print}'"
+  register: solr_pid
+  become: yes
+  become_user: root
+
+- name: Check Solr Process {{ solr_pid.stdout }} is running on Port {{ solr_port }}
+  shell: "lsof -i :{{ solr_port }} | sed -n '1!p' | awk '{print $2}'"
+  register: pid_on_port
+  become: yes
+  become_user: root
+
+- fail:
+    msg: "Solr not running on port {{ solr_port }}"
+  when: solr_pid.stdout != pid_on_port.stdout

@@ -1,0 +1,23 @@
+# Expose ports for Solr with firewalld
+---
+- name: Expose ports for Solr
+  block:
+    - name: Expose {{ solr_port }}
+      become: yes
+      become_user: root
+      firewalld:
+        port: "{{ solr_port }}/tcp"
+        permanent: true
+        zone: "{{ firewall_default_zone }}"
+        state: enabled
+    
+    - name: Reload firewalld
+      command: firewall-cmd --reload
+      become: yes
+      become_user: root
+
+    - name: Write firewall step
+      shell: "mkdir -p /root/{{ solr_service_name }} && echo solr7-firewall > /root/{{ solr_service_name }}/solr7-firewall.txt"
+      become: yes
+      become_user: root 
+  creates: "/root/{{ solr_service_name}}/solr7-firewall.txt"

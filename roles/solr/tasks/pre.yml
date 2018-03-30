@@ -1,0 +1,36 @@
+# Pre-install checks
+---
+- name: Ensure dependencies are installed.
+  package: name={{ item }} state=present
+  become: yes
+  become_user: root
+  with_items:
+    - lsof
+    - acl
+    - sudo
+
+# Ensure Java 1.8+ is present
+- name: Ensure Java Installed
+  shell: java -version 2>&1 | grep version | awk '{print $3}' | sed 's/"//g'
+  register: java_version
+- assert: { that: "java_version.stdout | version_compare('1.8', '>=')", msg: "Java must be present before being able to install Solr" }
+
+# Ensure no Solr of the same version exists
+- name: Check if the version of Solr already exists
+  stat:
+    path: "{{ solr_install_dir }}/solr-{{ solr_version }}"
+  register: solr_path
+
+# Ensure Solr service doesn't exist
+- name: Check if Solr {{ solr_version }} service exists
+  stat:
+    path: "/etc/init.d/{{ solr_service_name }}"
+  register: solr_service_path
+
+- debug:
+    msg: "Solr {{ solr_version }} is already installed"
+  when: solr_path.stat.exists == True or solr_service_path.stat.exists == True
+
+- name: End installation attempt if Solr {{ solr_version }} exists
+  meta: end_play
+  when: solr_path.stat.exists == True or solr_service_path.stat.exists == True 

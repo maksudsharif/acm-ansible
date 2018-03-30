@@ -1,0 +1,34 @@
+# Create ArkCase Solr configset
+---
+- name: Create ArkCase configset
+  block:
+    - name: Copy _default configset to create new configset
+      become: yes
+      become_user: "{{ solr_user }}"
+      shell: "cp -Rpf {{ solr_home }}/server/solr/configsets/_default {{ solr_home }}/server/solr/configsets/arkcase"  
+    
+    - name: Create ArkCase configset
+      become: yes
+      become_user: "{{ solr_user }}"
+      copy:
+        src: "{{ item }}"
+        dest: "{{ solr_home }}/server/solr/configsets/arkcase/conf"
+        owner: "{{ solr_user }}"
+        group: "{{ solr_group }}"
+        mode: 0644
+      with_items:
+        - schema.xml
+        - solrconfig.xml  
+    
+    - name: Delete default managed-schema
+      become: yes
+      become_user: "{{ solr_user }}"
+      file:
+        path: "{{ solr_home }}/server/solr/configsets/arkcase/conf/managed-schema"
+        state: absent
+    
+    - name: Write configset step
+      shell: "mkdir -p /root/{{ solr_service_name }} && echo solr7-configset > /root/{{ solr_service_name }}/solr7-configset.txt"
+      become: yes
+      become_user: root 
+  creates: "/root/{{ solr_service_name}}/solr7-configset.txt"

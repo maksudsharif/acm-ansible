@@ -1,0 +1,41 @@
+# Extracts downloaded Solr Distribution
+---
+- name: Extract Solr {{ solr_version }}
+  block:
+    - name: Create {{ solr_install_dir }} if it doesn't exist
+      become: yes
+      become_user: root
+      file:
+      path: "{{ solr_install_dir }}"
+      state: directory
+      owner: "{{ solr_user }}"
+      group: "{{ solr_group }}"
+      mode: 0755
+      recurse: yes
+
+    - name: Extract Solr to {{ solr_install_dir }}/solr-{{ solr_version }}
+      become: yes
+      become_user: "{{ solr_user }}"
+      unarchive:
+        src: "{{ tmp_dir }}/solr-{{ solr_version }}.tgz"
+        dest: "{{ solr_install_dir }}"
+        copy: no
+        owner: "{{ solr_user }}"
+        group: "{{ solr_group }}"
+        creates: "{{ solr_install_dir }}/solr-{{ solr_version }}"  
+        
+    - name: Create Symlink  {{ solr_install_dir }}/solr-{{ solr_version }} => {{ solr_home }}
+      become: yes
+      become_user: "{{ solr_user }}"
+      file:
+        src: "{{ solr_install_dir }}/solr-{{ solr_version }}"
+        dest: "{{ solr_home }}"
+        owner: "{{ solr_user }}"
+        group: "{{ solr_group }}"
+        state: link
+    
+    - name: Write extract-solr step
+      shell: "mkdir -p /root/{{ solr_service_name }} && echo solr7-extract > /root/{{ solr_service_name }}/solr7-extract.txt"
+      become: yes
+      become_user: root
+  creates: "/root/{{ solr_service_name }}/solr7-extract.txt"

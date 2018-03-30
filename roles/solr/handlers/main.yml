@@ -4,5 +4,3 @@
 # 
 # - name: restart ntpd
 #   service: name=ntpd state=restarted
-- name: Start Solr
-  shell: "service {{ solr_service_name }} start"
