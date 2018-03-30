@@ -4,6 +4,8 @@
   stat:
     path: "/root/{{ solr_service_name }}/solr7-cores.txt"
   register: cores_step
+  become: yes
+  become_user: root
 
 - name: Create ArkCase Solr cores
   block:
