@@ -21,14 +21,20 @@
   stat:
     path: "{{ solr_install_dir }}/solr-{{ solr_version }}"
   register: solr_path
-- assert: { that: "solr_path.stat.exists == False", msg: "Solr {{ solr_version }} is already installed." }
+
+- fail:
+    msg: "Solr {{ solr_version }} is already installed"
+  when: solr_service_path.stat.exists == True
 
 # Ensure Solr service doesn't exist
 - name: Check if Solr {{ solr_version }} service exists
   stat:
     path: "/etc/init.d/{{ solr_service_name }}"
   register: solr_service_path
-- assert: { that: "solr_service_path.stat.exists == False", msg: "Solr {{ solr_version }} service is already installed" }
+
+- fail:
+    msg: "Solr {{ solr_version }} service already exists in /etc/init.d"
+  when: solr_service_path.stat.exists == True
 
 # Validate SSL properties
 - fail:
