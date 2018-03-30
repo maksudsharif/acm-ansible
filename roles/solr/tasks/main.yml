@@ -1,7 +1,7 @@
 # file: roles/solr/tasks/main.yml
 ---
 # Pre installation checks
-- include: pre.yml
+- import_tasks: pre.yml
 
 # Ensure group exists
 - name: Create the solr group
@@ -34,13 +34,13 @@
   when: solr_downloaded.stat.exists == False
 
 # Extract downloaded file to install dir and create sym-link
-- include: extract.yml
+- import_tasks: extract.yml
 
 # Create ArkCase Solr configset for Cores
-- include: configset.yml
+- import_tasks: configset.yml
 
 # Install Solr service
-- include: install-service.yml
+- import_tasks: install-service.yml
 
 - name: Start {{ solr_service_name }}
   shell: "service {{ solr_service_name }} start"
@@ -48,11 +48,11 @@
   become_user: root
 
 # Create ArkCase cores
-- include: cores.yml
+- import_tasks: cores.yml
   when: solr_create_cores == true
 
 # Expose required ports for solr
-- include: firewall.yml
+- import_tasks: firewall.yml
   when: firewall_expose_ports == true
 
 - name: Check Solr {{ solr_version }} PID

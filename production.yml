@@ -1,7 +1,7 @@
 # file: site.yml
 ---
 - name: Install Solr 7
-  hosts: acm-ansible-solr
+  hosts: solr
   user: maksud.sharif
   # remote_user: user
   # sudo: yes
