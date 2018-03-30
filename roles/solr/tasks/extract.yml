@@ -11,12 +11,12 @@
       become: yes
       become_user: root
       file:
-      path: "{{ solr_install_dir }}"
-      state: directory
-      owner: "{{ solr_user }}"
-      group: "{{ solr_group }}"
-      mode: 0755
-      recurse: yes
+        path: "{{ solr_install_dir }}"
+        state: directory
+        owner: "{{ solr_user }}"
+        group: "{{ solr_group }}"
+        mode: 0755
+        recurse: yes
 
     - name: Extract Solr to {{ solr_install_dir }}/solr-{{ solr_version }}
       become: yes
