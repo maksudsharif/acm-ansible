@@ -7,7 +7,7 @@
 
 - name: Expose ports for Solr
   block:
-    - name: Expose {{ solr_port }}
+    - name: "Expose {{ solr_port }}"
       become: yes
       become_user: root
       firewalld:

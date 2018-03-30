@@ -7,7 +7,7 @@
 
 - name: Install Solr {{ solr_version }} service
   block:
-    - name: Install {{ solr_service_name }} to /etc/init.d
+    - name: "Install {{ solr_service_name }} to /etc/init.d"
       template:
         src: solr.j2
         dest: "/etc/init.d/{{ solr_service_name }}"
@@ -17,7 +17,7 @@
       become: yes
       become_user: root  
     
-    - name: Install Solr Env to {{ solr_install_dir }}/{{ solr_service_name }}
+    - name: "Install Solr Env to {{ solr_install_dir }}/{{ solr_service_name }}"
       become: yes
       become_user: "{{ solr_user }}"
       template:

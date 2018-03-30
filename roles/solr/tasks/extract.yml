@@ -6,7 +6,7 @@
   register: extract_step
 - name: Extract Solr {{ solr_version }}
   block:
-    - name: Create {{ solr_install_dir }} if it doesn't exist
+    - name: "Create {{ solr_install_dir }} if it doesn't exist"
       become: yes
       become_user: root
       file:
@@ -17,7 +17,7 @@
       mode: 0755
       recurse: yes
 
-    - name: Extract Solr to {{ solr_install_dir }}/solr-{{ solr_version }}
+    - name: "Extract Solr to {{ solr_install_dir }}/solr-{{ solr_version }}"
       become: yes
       become_user: "{{ solr_user }}"
       unarchive:
@@ -28,7 +28,7 @@
         group: "{{ solr_group }}"
         creates: "{{ solr_install_dir }}/solr-{{ solr_version }}"  
         
-    - name: Create Symlink  {{ solr_install_dir }}/solr-{{ solr_version }} => {{ solr_home }}
+    - name: "Create Symlink  {{ solr_install_dir }}/solr-{{ solr_version }} => {{ solr_home }}"
       become: yes
       become_user: "{{ solr_user }}"
       file:
