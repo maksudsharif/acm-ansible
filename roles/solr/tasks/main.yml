@@ -31,8 +31,10 @@
 - assert: { that: "solr_service_path.stat.exists == False", msg: "Solr {{ solr_version }} service is already installed" }
 
 # Validate SSL properties
-- assert: { that: "({{ ssl_vars | join(' is defined and ') }}) ", msg: "Solr SSL enabled, but properties not present."}
-  when: solr_ssl_enabled == 'true'
+- fail:
+    msg: "SSL is enabled, but variable '{{ item }}' is not defined or empty"
+  when: solr_ssl_enabled == true and not((item is undefined) or (item is none) or (item | trim == ''))
+  with_items: "{{ ssl_vars }}"
 
 # Ensure group exists
 - name: Create the solr group
@@ -75,7 +77,7 @@
     mode: 0755
     recurse: yes
 
-- name: Extract Solr
+- name: Extract Solr to {{ solr_install_dir }}/solr-{{ solr_version }}
   become: yes
   become_user: "{{ solr_user }}"
   unarchive:
@@ -86,7 +88,7 @@
     group: "{{ solr_group }}"
     creates: "{{ solr_install_dir }}/solr-{{ solr_version }}"
 
-- name: Create Symlink
+- name: Create Symlink  {{ solr_install_dir }}/solr-{{ solr_version }} => {{ solr_home }}
   become: yes
   become_user: "{{ solr_user }}"
   file:
@@ -96,7 +98,7 @@
     group: "{{ solr_group }}"
     state: link
 
-- name: Copy default configset to create new configset
+- name: Copy _default configset to create new configset
   become: yes
   become_user: "{{ solr_user }}"
   shell: "cp -Rpf {{ solr_home }}/server/solr/configsets/_default {{ solr_home }}/server/solr/configsets/arkcase"
