@@ -20,6 +20,7 @@ solr_create_cores: true
 solr_cores:
   - acmAdvancedSearch
   - acmQuickSearch
+solr_should_start: true
 
 # SSL
 # If SSL enabled, stores must exist on remote src

@@ -1,6 +1,6 @@
 # file: roles/solr/tasks/main.yml
 ---
-# Pre installation checks
+# Pre installation tasks
 - import_tasks: pre.yml
 
 # Ensure group exists
@@ -42,11 +42,6 @@
 # Install Solr service
 - import_tasks: install-service.yml
 
-- name: Start {{ solr_service_name }}
-  shell: "service {{ solr_service_name }} start"
-  become: yes
-  become_user: root
-
 # Create ArkCase cores
 - import_tasks: cores.yml
   when: solr_create_cores == true
@@ -55,18 +50,5 @@
 - import_tasks: firewall.yml
   when: firewall_expose_ports == true
 
-- name: Check Solr {{ solr_version }} PID
-  shell: "cat {{ solr_home }}/bin/solr-{{ solr_port }}.pid | awk '{if(NR<2)print}'"
-  register: solr_pid
-  become: yes
-  become_user: root
-
-- name: Check Solr Process {{ solr_pid.stdout }} is running on Port {{ solr_port }}
-  shell: "lsof -i :{{ solr_port }} | sed -n '1!p' | awk '{print $2}'"
-  register: pid_on_port
-  become: yes
-  become_user: root
-
-- fail:
-    msg: "Solr not running on port {{ solr_port }}"
-  when: solr_pid.stdout != pid_on_port.stdout
+# Run post-installation tasks
+- import_tasks: post.yml

@@ -9,6 +9,11 @@
 
 - name: Create ArkCase Solr cores
   block:
+    - name: Start {{ solr_service_name }}
+      shell: "service {{ solr_service_name }} start"
+      become: yes
+      become_user: root
+
     - name: Create ArkCase Solr Cores
       become: yes
       become_user: "{{ solr_user }}"
@@ -16,8 +21,15 @@
       with_items:
         - "{{ solr_cores }}"
     
+    - name: Stop {{ solr_service_name }}
+      shell:  "service {{ solr_service_name }} stop"
+      become: yes
+      become_user: root
+    
     - name: Write cores step
       shell: "mkdir -p /root/{{ solr_service_name }} && echo solr7-cores > /root/{{ solr_service_name }}/solr7-cores.txt"
       become: yes
       become_user: root
-  when: cores_step.stat.exists == False
+      set_fact:
+        cores_step.stat.exists: True
+  when: cores_step.stat.exists == False and install_service_step.stat.exists == True

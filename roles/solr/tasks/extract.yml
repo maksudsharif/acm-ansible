@@ -7,7 +7,7 @@
   become: yes
   become_user: root
 
-- name: "Extract Solr {{ solr_version }}"
+- name: Extract Solr {{ solr_version }}
   block:
     - name: Create {{ solr_install_dir }} if it doesn't exist
       become: yes
@@ -45,4 +45,6 @@
       shell: "mkdir -p /root/{{ solr_service_name }} && echo solr7-extract > /root/{{ solr_service_name }}/solr7-extract.txt"
       become: yes
       become_user: root
+      set_fact:
+        extract_step.stat.exists: True
   when: extract_step.stat.exists == False

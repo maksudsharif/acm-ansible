@@ -38,4 +38,6 @@
       shell: "mkdir -p /root/{{ solr_service_name }} && echo solr7-configset > /root/{{ solr_service_name }}/solr7-configset.txt"
       become: yes
       become_user: root 
-  when: configset_step.stat.exists == False
+      set_fact:
+        configset_step.stat.exists: True
+  when: configset_step.stat.exists == False and extract_step.stat.exists == True
