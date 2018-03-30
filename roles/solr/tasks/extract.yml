@@ -45,6 +45,7 @@
       shell: "mkdir -p /root/{{ solr_service_name }} && echo solr7-extract > /root/{{ solr_service_name }}/solr7-extract.txt"
       become: yes
       become_user: root
-      set_fact:
+
+    - set_fact:
         extract_step.stat.exists: True
   when: extract_step.stat.exists == False

@@ -30,6 +30,5 @@
       shell: "mkdir -p /root/{{ solr_service_name }} && echo solr7-cores > /root/{{ solr_service_name }}/solr7-cores.txt"
       become: yes
       become_user: root
-      set_fact:
-        cores_step.stat.exists: True
+
   when: cores_step.stat.exists == False and install_service_step.stat.exists == True
