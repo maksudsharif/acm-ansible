@@ -34,13 +34,13 @@
   when: solr_downloaded.stat.exists == False
 
 # Extract downloaded file to install dir and create sym-link
-- include_tasks: extract.yml
+- import_tasks: extract.yml
 
 # Create ArkCase Solr configset for Cores
-- include_tasks: configset.yml
+- import_tasks: configset.yml
 
 # Install Solr service
-- include_tasks: install-service.yml
+- import_tasks: install-service.yml
 
 - name: Start {{ solr_service_name }}
   shell: "service {{ solr_service_name }} start"

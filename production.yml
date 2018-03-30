@@ -6,5 +6,5 @@
   # remote_user: user
   # sudo: yes
   roles:
-    - { role: oracle-jdk, java_version: 8, java_update: 161, java_build: 12, deploy_via_local: false, cleanup: true }
+    #- { role: oracle-jdk, java_version: 8, java_update: 161, java_build: 12, deploy_via_local: false, cleanup: true }
     - { role: solr }

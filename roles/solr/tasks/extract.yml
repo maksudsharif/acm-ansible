@@ -4,6 +4,7 @@
   stat:
     path: "/root/{{ solr_service_name }}/solr7-extract.txt"
   register: extract_step
+
 - name: "Extract Solr {{ solr_version }}"
   block:
     - name: "Create {{ solr_install_dir }} if it doesn't exist"
