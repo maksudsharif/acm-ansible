@@ -17,8 +17,8 @@
         group: root
         mode: 0755
       become: yes
-      become_user: root  
-    
+      become_user: root
+
     - name: "Install Solr Env to {{ solr_install_dir }}/{{ solr_service_name }}"
       become: yes
       become_user: "{{ solr_user }}"
@@ -28,12 +28,17 @@
         owner: "{{ solr_user }}"
         group: "{{ solr_group }}"
         mode: 0755
-    
+
     - name: Write install-service step
       shell: "mkdir -p /root/{{ solr_service_name }} && echo solr7-install-service > /root/{{ solr_service_name }}/solr7-install-service.txt"
       become: yes
-      become_user: root 
+      become_user: root
 
-    - set_fact:
-        install_service_step.stat.exists: True
+    - name: Update install-service step...
+      stat:
+        path: "/root/{{ solr_service_name }}/solr7-install-service.txt"
+      register: install_service_step
+      become: yes
+      become_user: root
+
   when: install_service_step.stat.exists == False and configset_step.stat.exists == True
