@@ -64,9 +64,9 @@ ssl_vars:
 
 # JMX Settings
 solr_jmx_enabled: true
-solr_jmx_local_only: false
-solr_jmx_ssl: false
-solr_jmx_authenticate: true
+solr_jmx_local_only: "{{ false | bool }}"
+solr_jmx_ssl: "{{ false | bool }}"
+solr_jmx_authenticate: "{{ true | bool }}"
 solr_jmx_port: 50502
 solr_jmx_rmi_port: 50503
 solr_jmx_rmi_hostname: "{{ solr_host }}"
@@ -82,4 +82,4 @@ jmx_vars:
   - solr_jmx_password_file
   - solr_jmx_access_file
 # aggregate jmx opts for templating
-solr_jmx_opts: "SOLR_OPTS=$SOLR_OPTS -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.only={{ solr_jmx_local_only }} -Dcom.sun.management.jmxremote.ssl={{ solr_jmx_ssl }} -Dcom.sun.management.jmxremote.authenticate={{ solr_jmx_authenticate }} -Dcom.sun.management.jmxremote.port={{ solr_jmx_port }} -Dcom.sun.management.jmxremote.rmi.port={{ solr_jmx_rmi_port }} -Dcom.sun.management.jmxremote.access.file={{ solr_jmx_access_file }} -Dcom.sun.management.jmxremote.password.file={{ solr_jmx_password_file }} -Djava.rmi.server.hostname={{ solr_jmx_rmi_hostname }}"
+solr_jmx_opts: "{{ lookup('template', 'jmx.j2') }}"
