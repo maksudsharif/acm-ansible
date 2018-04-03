@@ -46,35 +46,77 @@
       failed_when: "'ERROR' in stop_result.stderr"
 
     # Solr has stopped, now move old installation if preserve_old true otherwise delete old installation
-    - name: Cleanup old installation (preserve)
-      shell: "mv {{ solr_install_dir_old }}/solr {{ solr_install_dir_old }}/solr-{{ solr_version_old }}"
-      become: yes
-      become_user: root
-      when: solr_path_old.stat.exists == True and solr_preserve_old == true
-    
-    - name: Cleanup old installation (delete directory)
-      file:
-        path: "{{ solr_install_dir_old }}/solr"
-        state: absent
-      become: yes
-      become_user: root
-      when: solr_path_old.stat.exists == True and solr_preserve_old == false
+    - name: Cleanup directory block
+      block:
+        - name: Solr Pre version 6 block
+          block:
+            - name: Pre version 6 preserve block
+              block:
+                - name: Move old installation to new versioned directory (preserve)
+                  shell: "mv {{ solr_install_dir_old }}/{{ solr_service_name_old }} {{ solr_install_dir_old }}/{{ solr_service_name_old }}-{{ solr_version_old }}"
+                  become: yes
+                  become_user: root
 
-    - name: Cleanup old installation (delete symlink and preserve)
-      file:
-        path: "{{ solr_install_dir_old }}/solr"
-        state: absent
-      become: yes
-      become_user: root
-      when: solr_path_old.stat.exists == True
+                - name: Cleanup old service script (preserve)
+                  shell: "mv /etc/init.d/{{ solr_service_name_old }} /etc/init.d/{{ solr_service_name_old }}-{{ solr_version_old }}"
+                  become: yes
+                  become_user: root
+              when: solr_old_preserve  == true
 
-    - name: Cleanup old installation (delete directory)
-      file:
-        path: "{{ solr_install_dir_old }}/solr-{{ solr_version_old }}"
-        state: absent
-      become: yes
-      become_user: root
-      when: solr_path_old.stat.exists == True and solr_preserve_old == false
+            - name: Pre version 6 non-preserve block
+              block:
+                - name: Cleanup old installation
+                  file:
+                    path: "{{ solr_install_dir_old }}/{{ solr_service_name_old }}"
+                    state: absent
+                  become: yes
+                  become_user: root
+                - name: Cleanup old service script
+                  file:
+                    path: "/etc/init.d/{{ solr_service_name_old }}"
+                    state: absent
+                  become: yes
+                  become_user: root
+              when: solr_old_preserve == false
+          when: solr_version_le6 == True
+        - name: Solr version 6+ block
+          block:
+            - name: Solr version 6+ preserve block
+              block:
+                - name: Cleanup old symlink (preserve)
+                  file:
+                    path: "{{ solr_install_dir_old }}/{{ solr_service_name_old }}"
+                    state: absent
+                  become: yes
+                  become_user: root
+
+                - name: Cleanup old service script (preserve)
+                  shell: "mv /etc/init.d/{{ solr_service_name_old }} /etc/init.d/{{ solr_service_name_old }}-{{ solr_version_old }}"
+                  become: yes
+                  become_user: root
+              when: solr_old_preserve  == true
+            - name: Solr version 6+ non-preserve block
+              block:
+                - name: Cleanup old symlink
+                  file:
+                    path: "{{ solr_install_dir_old }}/{{ solr_service_name_old }}"
+                    state: absent
+                  become: yes
+                  become_user: root
+                - name: Cleanup old installation
+                  file:
+                    path: "{{ solr_install_dir_old }}/{{ solr_service_name_old }}"
+                    state: absent
+                  become: yes
+                  become_user: root
+                - name: Cleanup old service script
+                  file:
+                    path: "/etc/init.d/{{ solr_service_name_old }}"
+                    state: absent
+                  become: yes
+                  become_user: root
+              when: solr_old_preserve == false
+          when: solr_version_le6 == False
 
     - name: Write uninstall step
       shell: "mkdir -p /root/{{ solr_service_name }} && echo solr7-uninstall > /root/{{ solr_service_name }}/solr7-uninstall.txt"
