@@ -19,9 +19,25 @@
 # Uninstall old version of Solr
 # Validate uninstall properties
 - fail:
-    msg: "Uninstall is requested, but variable '{{ item }}' is not defined or empty"
-  when: solr_uninstall_old == true and item is not defined or item is none or (item | trim == '')
+    msg: "Uninstall is requested, but variable '{{ item }}': {{ item }} is not defined or empty"
+  when: solr_uninstall_old == true and (item is undefined or item is none or (item | trim == ''))
   with_items: "{{ uninstall_vars }}"
+
+- fail:
+    msg: "Preserve old requested, but versions requested to install and uninstall (new: {{ solr_version }}, old: {{ solr_version_old }}) are the same, change 'solr_preserve_old' to false"
+  when: solr_uninstall_old == true and solr_preserve_old == true and (solr_version | version_compare(solr_version_old, '='))
+
+# Validate SSL properties
+- fail:
+    msg: "SSL is enabled, but variable '{{ item }}' is not defined or empty"
+  when: solr_ssl_enabled == true and (item is undefined or item is none or (item | trim == ''))
+  with_items: "{{ ssl_vars }}"
+
+# Validate JMX properties
+- fail:
+    msg: "JMX is enabled, but variable '{{ item }}' is not defined or empty"
+  when: solr_jmx_enabled == true and (item is undefined or item is none or (item | trim == ''))
+  with_items: "{{ jmx_vars }}"
 
 - include_tasks: uninstall.yml
   when: solr_uninstall_old == true
@@ -38,14 +54,6 @@
     path: "/etc/init.d/{{ solr_service_name }}"
   register: solr_service_path
 
-# Ensure Solr service doesn't exist
-- name: Check if previous installation succeeded
-  stat:
-    path: "/root/{{ solr_service_name }}/solr7-complete.txt"
-  register: solr_install_complete
-  become: yes
-  become_user: root
-
 - debug:
     msg: "Solr {{ solr_version }} is already installed"
   when: (solr_path.stat.exists == True or solr_service_path.stat.exists == True) and solr_install_complete.stat.exists == True
@@ -53,15 +61,3 @@
 - name: End installation attempt if Solr {{ solr_version }} exists
   meta: end_play
   when: (solr_path.stat.exists == True or solr_service_path.stat.exists == True) and solr_install_complete.stat.exists == True
-
-# Validate SSL properties
-- fail:
-    msg: "SSL is enabled, but variable '{{ item }}' is not defined or empty"
-  when: solr_ssl_enabled == true and item is undefined or item is none or (item | trim == '')
-  with_items: "{{ ssl_vars }}"
-
-# Validate JMX properties
-- fail:
-    msg: "JMX is enabled, but variable '{{ item }}' is not defined or empty"
-  when: solr_jmx_enabled == true and item is undefined or item is none or (item | trim == '')
-  with_items: "{{ jmx_vars }}"
