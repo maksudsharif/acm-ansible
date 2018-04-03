@@ -19,8 +19,8 @@
 # Uninstall old version of Solr
 # Validate uninstall properties
 - fail:
-    msg: "Uninstall is requested, but variable '{{ item }}': {{ item }} is not defined or empty"
-  when: solr_uninstall_old == true and not((item is undefined) or (item is none) or (item | trim == ''))
+    msg: "Uninstall is requested, but variable '{{ item }}' is not defined or empty"
+  when: solr_uninstall_old == true and item is not defined or item is none or (item | trim == '')
   with_items: "{{ uninstall_vars }}"
 
 - include_tasks: uninstall.yml
@@ -54,6 +54,6 @@
 
 # Validate JMX properties
 - fail:
-    msg: "JMX is enabled, but variable '{{ item }}': {{ item }} is not defined or empty"
+    msg: "JMX is enabled, but variable '{{ item }}' is not defined or empty"
   when: solr_jmx_enabled == true and not((item is undefined) or (item is none) or (item | trim == ''))
   with_items: "{{ jmx_vars }}"
