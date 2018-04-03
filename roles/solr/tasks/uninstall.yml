@@ -42,6 +42,8 @@
       when: solr_service_path_old.stat.exists == True
       become: yes
       become_user: root
+      register: stop_result
+      failed_when: "'ERROR' in stop_result.stderr"
 
     # Solr has stopped, now move old installation if preserve_old true otherwise delete old installation
     - name: Cleanup old installation (preserve)
