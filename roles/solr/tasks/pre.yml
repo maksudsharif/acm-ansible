@@ -38,13 +38,21 @@
     path: "/etc/init.d/{{ solr_service_name }}"
   register: solr_service_path
 
+# Ensure Solr service doesn't exist
+- name: Check if previous installation succeeded
+  stat:
+    path: "/root/{{ solr_service_name }}/solr7-complete.txt"
+  register: solr_install_complete
+  become: yes
+  become_user: root
+
 - debug:
     msg: "Solr {{ solr_version }} is already installed"
-  when: solr_path.stat.exists == True or solr_service_path.stat.exists == True
+  when: (solr_path.stat.exists == True or solr_service_path.stat.exists == True) and solr_install_complete.stat.exists == True
 
 - name: End installation attempt if Solr {{ solr_version }} exists
   meta: end_play
-  when: solr_path.stat.exists == True or solr_service_path.stat.exists == True
+  when: (solr_path.stat.exists == True or solr_service_path.stat.exists == True) and solr_install_complete.stat.exists == True
 
 # Validate SSL properties
 - fail:

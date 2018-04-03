@@ -29,4 +29,3 @@
       shell: "mkdir -p /root/{{ solr_service_name }} && echo solr7-complete > /root/{{ solr_service_name }}/solr7-complete.txt"
       become: yes
       become_user: root
-      
