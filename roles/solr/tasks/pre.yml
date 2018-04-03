@@ -28,12 +28,16 @@
   when: solr_uninstall_old == true and solr_preserve_old == true and (solr_version | version_compare(solr_version_old, '='))
 
 # Validate SSL properties
+- debug:
+    var: ssl_vars
 - fail:
     msg: "SSL is enabled, but variable '{{ item }}' is not defined or empty"
   when: solr_ssl_enabled == true and (item is undefined or item is none or (item | trim == ''))
   with_items: "{{ ssl_vars }}"
 
 # Validate JMX properties
+- debug:
+    var: jmx_vars
 - fail:
     msg: "JMX is enabled, but variable '{{ item }}' is not defined or empty"
   when: solr_jmx_enabled == true and (item is undefined or item is none or (item | trim == ''))
