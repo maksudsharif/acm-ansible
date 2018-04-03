@@ -61,7 +61,7 @@
                   shell: "mv /etc/init.d/{{ solr_service_name_old }} /etc/init.d/{{ solr_service_name_old }}-{{ solr_version_old }}"
                   become: yes
                   become_user: root
-              when: solr_old_preserve  == true
+              when: solr_preserve_old  == true
 
             - name: Pre version 6 non-preserve block
               block:
@@ -77,7 +77,7 @@
                     state: absent
                   become: yes
                   become_user: root
-              when: solr_old_preserve == false
+              when: solr_preserve_old == false
           when: solr_version_le6 == True
         - name: Solr version 6+ block
           block:
@@ -94,7 +94,7 @@
                   shell: "mv /etc/init.d/{{ solr_service_name_old }} /etc/init.d/{{ solr_service_name_old }}-{{ solr_version_old }}"
                   become: yes
                   become_user: root
-              when: solr_old_preserve  == true
+              when: solr_preserve_old  == true
             - name: Solr version 6+ non-preserve block
               block:
                 - name: Cleanup old symlink
@@ -115,7 +115,7 @@
                     state: absent
                   become: yes
                   become_user: root
-              when: solr_old_preserve == false
+              when: solr_preserve_old == false
           when: solr_version_le6 == False
 
     - name: Write uninstall step
