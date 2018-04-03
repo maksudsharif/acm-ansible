@@ -63,8 +63,11 @@ if [ $? -ne 0 ]; then
 fi
 
 case "$1" in
-  start|stop|restart|status)
+  start|restart|status)
     SOLR_CMD="$1"
+    ;;
+  stop)
+    SOLR_CMD="$1 -k {{ solr_stop_key }} -p {{ solr_stop_port }}"
     ;;
   *)
     echo "Usage: $0 {start|stop|restart|status}"
