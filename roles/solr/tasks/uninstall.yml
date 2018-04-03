@@ -28,14 +28,14 @@
         path: "{{ solr_install_dir_old }}/solr"
       register: solr_path_old_le5
       when: solr_version_le6 == True
-    
-    - fail:
-        msg: "Unable to find old installation of Solr"
-      when: solr_service_path_old.stat.exists == False solr_path_old_le5.stat.exists == False and solr_path_old_g5.stat.exists == False
 
     # Organize uninstall facts
     - set_fact:
         solr_path_old: "{{ solr_version_le6 == True | ternary(solr_path_old_le5, solr_path_old_g5) }}"
+
+    - fail:
+        msg: "Unable to find old installation of Solr"
+      when: solr_service_path_old.stat.exists == False solr_path_old.stat.exists == False
 
     - name: Stop old Solr
       shell: "service {{ solr_service_name_old }} stop"
