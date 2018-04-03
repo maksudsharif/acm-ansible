@@ -7,4 +7,4 @@
   # sudo: yes
   roles:
     #- { role: oracle-jdk, java_version: 8, java_update: 161, java_build: 12, deploy_via_local: false, cleanup: true }
-    - { role: solr, solr_uninstall_old: true }
+    - { role: solr, solr_uninstall_old: true, solr_version_old: 7.2.1, solr_jmx_enabled: true }
