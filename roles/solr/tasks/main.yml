@@ -22,16 +22,34 @@
     append: yes
 
 # Don't re-download Solr distribution
-- name: Check if Solr is downloaded
+- name: Check if Solr is downloaded (local)
+  local_action: stat path="{{ tmp_dir }}/solr-{{ solr_version }}.tgz"
+  register: solr_downloaded
+  when: deploy_via_local
+
+- name: Check if Solr is downloaded (remote)
   stat:
     path: "{{ tmp_dir }}/solr-{{ solr_version }}.tgz"
   register: solr_downloaded
+  when: not deploy_via_local
 
 - name: Download Solr
+  local_action: get_url
+    url="{{ solr_download_url }}"
+    dest="{{ tmp_dir }}/solr-{{ solr_version }}.tgz"
+  when: solr_downloaded.stat.exists == False and deploy_via_local
+
+- name: Copy Solr {{ solr_version }} package to remote
+  copy:
+    src: "{{ tmp_dir }}/solr-{{ solr_version }}.tgz"
+    dest: "{{ tmp_dir }}/solr-{{ solr_version }}.tgz"
+  when: deploy_via_local
+
+- name: Download Solr (remote)
   get_url:
     url: "{{ solr_download_url }}"
     dest: "{{ tmp_dir }}/solr-{{ solr_version }}.tgz"
-  when: solr_downloaded.stat.exists == False
+  when: solr_downloaded.stat.exists == False and not deploy_via_local
 
 # Extract downloaded file to install dir and create sym-link
 - import_tasks: extract.yml

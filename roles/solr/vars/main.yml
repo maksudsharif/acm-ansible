@@ -2,6 +2,7 @@
 # vars file for solr
 ---
 tmp_dir: /tmp
+deploy_via_local: true
 firewall_default_zone: public
 firewall_expose_ports: true
 firewall_expose_jmx_ports: false
