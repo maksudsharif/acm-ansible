@@ -42,7 +42,7 @@
 
 # Validate JMX properties
 - debug:
-    msg: "{{ item }} => Failed validation ({{ vars[item] }}) ? : {{ solr_jmx_enabled == true and not(item is undefined or item is none or (item | trim == '')) }} => is undefined: {{ item is undefined }}, is none: {{ item is none }}, empty: {{ (item | trim == '' }}"
+    msg: "{{ item }} => Failed validation ({{ vars[item] }}) ? : {{ solr_jmx_enabled == true and not(item is undefined or item is none or (item | trim == '')) }} => is undefined: {{ item is undefined }}, is none: {{ item is none }}, empty: {{ (item | trim == '') }}"
   with_items: "{{ jmx_vars }}"
 
 - fail:
