@@ -24,14 +24,17 @@
 # Don't re-download Solr distribution
 - name: Check if Solr is downloaded (local)
   local_action: stat path="{{ tmp_dir }}/solr-{{ solr_version }}.tgz"
-  register: solr_downloaded
+  register: solr_downloaded_local
   when: deploy_via_local
 
 - name: Check if Solr is downloaded (remote)
   stat:
     path: "{{ tmp_dir }}/solr-{{ solr_version }}.tgz"
-  register: solr_downloaded
+  register: solr_downloaded_remote
   when: not deploy_via_local
+
+- set_fact:
+    solr_downloaded: "{{ ((solr_downloaded_local and deploy_via_local) | bool) | ternary(solr_downloaded_local, solr_downloaded_remote) }}"
 
 - name: Download Solr
   local_action: get_url
