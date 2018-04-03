@@ -7,6 +7,13 @@
   become: yes
   become_user: root
 
+- name: Check if 'install-service' ran previously...
+  stat:
+    path: "/root/{{ solr_service_name }}/solr7-install-service.txt"
+  register: install_service_step
+  become: yes
+  become_user: root
+
 - name: Create ArkCase Solr cores
   block:
     - name: Start {{ solr_service_name }}
