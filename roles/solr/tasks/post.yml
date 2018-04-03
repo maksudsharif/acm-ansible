@@ -2,24 +2,31 @@
 ---
 - name: Run post-installation tasks
   block:
-    - name: Start {{ solr_service_name }}
-      shell: "service {{ solr_service_name }} start"
+    - name: Start block
+      block:
+        - name: Start {{ solr_service_name }}
+          shell: "service {{ solr_service_name }} start"
+          become: yes
+          become_user: root
+
+        - name: Check Solr {{ solr_version }} PID
+          shell: "cat {{ solr_home }}/bin/solr-{{ solr_port }}.pid | awk '{if(NR<2)print}'"
+          register: solr_pid
+          become: yes
+          become_user: root
+
+        - name: Check Solr Process {{ solr_pid.stdout }} is running on Port {{ solr_port }}
+          shell: "lsof -i :{{ solr_port }} | sed -n '1!p' | awk '{print $2}'"
+          register: pid_on_port
+          become: yes
+          become_user: root
+
+        - fail:
+            msg: "Solr not running on port {{ solr_port }}"
+          when: solr_pid.stdout != pid_on_port.stdout
+      when: solr_should_start == true
+    - name: Write complete step
+      shell: "mkdir -p /root/{{ solr_service_name }} && echo solr7-complete > /root/{{ solr_service_name }}/solr7-complete.txt"
       become: yes
       become_user: root
       
-    - name: Check Solr {{ solr_version }} PID
-      shell: "cat {{ solr_home }}/bin/solr-{{ solr_port }}.pid | awk '{if(NR<2)print}'"
-      register: solr_pid
-      become: yes
-      become_user: root
-    
-    - name: Check Solr Process {{ solr_pid.stdout }} is running on Port {{ solr_port }}
-      shell: "lsof -i :{{ solr_port }} | sed -n '1!p' | awk '{print $2}'"
-      register: pid_on_port
-      become: yes
-      become_user: root
-    
-    - fail:
-        msg: "Solr not running on port {{ solr_port }}"
-      when: solr_pid.stdout != pid_on_port.stdout
-  when: solr_should_start == true
