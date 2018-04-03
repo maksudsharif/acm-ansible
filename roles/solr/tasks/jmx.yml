@@ -18,7 +18,7 @@
         owner: "{{ solr_user }}"
         group: "{{ solr_group }}"
         mode: 0644
-        creates: "{{ solr_home }}/access.file"
+        force: no
 
     - name: Copy password file
       become: yes
@@ -29,7 +29,7 @@
         owner: "{{ solr_user }}"
         group: "{{ solr_group }}"
         mode: 0600
-        creates: "{{ solr_home }}/password.file"
+        force: no
 
     - name: Write jmx step
       shell: "mkdir -p /root/{{ solr_service_name }} && echo solr7-jmx > /root/{{ solr_service_name }}/solr7-jmx.txt"
