@@ -18,7 +18,6 @@
 
 # Uninstall old version of Solr
 - include_tasks: uninstall.yml
-  debug: { msg: "Uninstalling Solr {{ solr_version }}" }
   when: solr_uninstall_old == true and not((item is undefined) or (item is none) or (item | trim == ''))
   with_items:
     - "{{ uninstall_vars }}"
