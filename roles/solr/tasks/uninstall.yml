@@ -128,7 +128,7 @@
         path: "/root/{{ solr_service_name_old }}"
         state: absent
       become: yes
-      become_user: yes
+      become_user: root
 
     - name: Write uninstall step
       shell: "mkdir -p /root/{{ solr_service_name }} && echo solr7-uninstall > /root/{{ solr_service_name }}/solr7-uninstall.txt"
