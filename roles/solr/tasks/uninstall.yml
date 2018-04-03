@@ -118,6 +118,11 @@
               when: solr_preserve_old == false
           when: solr_version_le6 == False
 
+    - name: Remove old exposed Solr Port {{ solr_port_old }}
+      become: yes
+      become_user: root
+      command: "firewall-cmd --remove-port={{ solr_port_old }}/tcp --permanent --zone={{ firewall_default_zone }}"
+
     - name: Delete old installation status
       file:
         path: "/root/{{ solr_service_name_old }}"
