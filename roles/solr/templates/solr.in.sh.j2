@@ -81,6 +81,13 @@ SOLR_OPTS="$SOLR_OPTS -Dsolr.autoSoftCommit.maxTime=1000"
 #SOLR_OPTS="$SOLR_OPTS -Dsolr.autoCommit.maxTime=60000"
 #SOLR_OPTS="$SOLR_OPTS -Dsolr.clustering.enabled=true"
 
+# Solr Stop Settings
+SOLR_OPTS="$SOLR_OPTS -DSTOP.KEY={{ solr_stop_key | default('solrrocks') }}"
+SOLR_OPTS="$SOLR_OPTS -DSTOP.PORT={{ solr_stop_port | default(solr_port) }}"
+
+# JAVA RMI Settings (Do not use built in Solr JMX settings as they do not allow authentication)
+{{ solr_jmx_enabled == 'true' | ternary(solr_jmx_opts, "# JMX Not enabled") }}
+
 # Location where the bin/solr script will save PID files for running instances
 # If not set, the script will create PID files in $SOLR_TIP/bin
 #SOLR_PID_DIR=

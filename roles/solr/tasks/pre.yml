@@ -13,7 +13,15 @@
 - name: Ensure Java Installed
   shell: java -version 2>&1 | grep version | awk '{print $3}' | sed 's/"//g'
   register: java_version
+  changed_when: False
 - assert: { that: "java_version.stdout | version_compare('1.8', '>=')", msg: "Java must be present before being able to install Solr" }
+
+# Uninstall old version of Solr
+- include: uninstall.yml
+  debug: { msg: "Uninstalling Solr {{ solr_version }}" }
+  when: solr_uninstall_old == true and not((item is undefined) or (item is none) or (item | trim == ''))
+  with_items:
+    - "{{ uninstall_vars }}"
 
 # Ensure no Solr of the same version exists
 - name: Check if the version of Solr already exists
@@ -40,3 +48,9 @@
     msg: "SSL is enabled, but variable '{{ item }}' is not defined or empty"
   when: solr_ssl_enabled == true and not((item is undefined) or (item is none) or (item | trim == ''))
   with_items: "{{ ssl_vars }}"
+
+# Validate JMX properties
+- fail:
+    msg: "JMX is enabled, but variable '{{ item }}' is not defined or empty"
+  when: solr_jmx_enabled == true and not((item is undefined) or (item is none) or (item | trim == ''))
+  with_items: "{{ jmx_vars }}"

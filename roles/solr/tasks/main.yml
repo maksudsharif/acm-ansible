@@ -36,6 +36,10 @@
 # Extract downloaded file to install dir and create sym-link
 - import_tasks: extract.yml
 
+# Configure JMX
+- import_tasks: jmx.yml
+  when: solr_jmx_enabled  == true
+
 # Create ArkCase Solr configset for Cores
 - import_tasks: configset.yml
 

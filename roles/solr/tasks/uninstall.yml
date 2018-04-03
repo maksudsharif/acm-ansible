@@ -1,3 +1,84 @@
+# Uninstall old version of Solr
 ---
-- debug:
-    msg: "Uninstall of Solr {{ solr_version_old }} requested..."
+- name: Check if 'uninstall' ran previously...
+  stat:
+    path: "/root/{{ solr_service_name }}/solr7-uninstall.txt"
+  register: uninstall_step
+  become: yes
+  become_user: root
+
+- name: Uninstall Solr {{ solr_version_old }}
+  block: 
+    - set_fact:
+        solr_version_le6: "{{ solr_version_old | version_compare('6', >=) }}"
+    
+    - name: Check if Solr {{ solr_version_old }} service exists in /etc/init.d
+      stat:
+        path: "/etc/init.d/{{ solr_service_name_old }}"
+      register: solr_service_path_old
+
+    - name: Check if the version of Solr already exists
+      stat:
+        path: "{{ solr_install_dir_old }}/solr-{{ solr_version_old }}"
+      register: solr_path_old_g5
+      when: solr_version_le6 == False
+    
+    - name: Check if the version of Solr already exists
+      stat:
+        path: "{{ solr_install_dir_old }}/solr"
+      register: solr_path_old_le5
+      when: solr_version_le6 == True
+    
+    - fail:
+        msg: "Unable to find old installation of Solr"
+      when: solr_path_old_le5.stat.exists == False and solr_path_old_g5.stat.exists == False
+    
+    - name: Stop old Solr
+      shell: "service {{ solr_service_name_old }} stop"
+      when: solr_service_path_old.stat.exists == True
+    
+    - name: Stop old Solr without service script
+      shell: "java -DSTOP.PORT={{ solr_stop_port_old }} -DSTOP.KEY={{ solr_stop_key_old }} -jar {{ solr_install_dir_old }}/solr/acm3/start.jar --stop"
+      when: solr_path_old_le5.stat.exists == True and solr_service_path_old.stat.exists == False
+
+    - name: Stop old Solr without service script
+      shell: "{{ solr_install_dir_old }}/solr-{{ solr_version  }}/bin/solr stop -k {{ solr_stop_key_old }} -p {{ solr_stop_port_old }}"
+      when: solr_path_old_g5.stat.exists == True and solr_service_path_old.stat.exists == False
+
+    # Solr has stopped, now move old installation if preserve_old true otherwise delete old installation
+    - name: Cleanup old installation (preserve)
+      shell: "mv {{ solr_install_dir_old }}/solr {{ solr_install_dir_old }}/solr-{{ solr_version_old }}"
+      become: yes
+      become_user: root
+      when: solr_path_old_le5.stat.exists == True and solr_preserve_old == true
+    
+    - name: Cleanup old installation (delete directory)
+      file:
+        path: "{{ solr_install_dir_old }}/solr"
+        state: absent
+      become: yes
+      become_user: root
+      when: solr_path_old_le5.stat.exists == True and solr_preserve_old == false
+
+    - name: Cleanup old installation (delete symlink and preserve)
+      file:
+        path: "{{ solr_install_dir_old }}/solr"
+        state: absent
+      become: yes
+      become_user: root
+      when: solr_path_old_g5.stat.exists == True
+
+    - name: Cleanup old installation (delete directory)
+      file:
+        path: "{{ solr_install_dir_old }}/solr-{{ solr_version_old }}"
+        state: absent
+      become: yes
+      become_user: root
+      when: solr_path_old_g5.stat.exists == True and solr_preserve_old == false
+
+    - name: Write uninstall step
+      shell: "mkdir -p /root/{{ solr_service_name }} && echo solr7-uninstall > /root/{{ solr_service_name }}/solr7-uninstall.txt"
+      become: yes
+      become_user: root
+
+  when: uninstall_step.stat.exists == False

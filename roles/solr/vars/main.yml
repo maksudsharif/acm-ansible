@@ -4,10 +4,29 @@
 tmp_dir: /tmp
 firewall_default_zone: public
 firewall_expose_ports: true
+firewall_expose_jmx_ports: false
 
+solr_uninstall_old: true
+solr_install_dir_old: /opt/app/acm
+solr_port_old: 8983
+solr_version_old: 4.8.1
+solr_preserve_old: true
+solr_service_name_old: solr
+solr_stop_port_old: 8079
+solr_stop_key_old: gdead
+uninstall_vars:
+  - solr_version_old
+  - solr_preserve_old
+  - solr_service_name_old
+  - solr_stop_port_old
+  - solr_stop_key_old
+  - solr_port_old
+  - solr_install_dir_old
 
 solr_host: localhost
 solr_port: 8983
+solr_stop_port: 8079
+solr_stop_key: gdead
 solr_service_name: solr
 solr_user: webuser
 solr_group: webuser
@@ -42,3 +61,25 @@ ssl_vars:
   - solr_ssl_trust_store_type
   - solr_ssl_need_client_auth
   - solr_ssl_want_client_auth
+
+# JMX Settings
+solr_jmx_enabled: true
+solr_jmx_local_only: false
+solr_jmx_ssl: false
+solr_jmx_authenticate: true
+solr_jmx_port: 50502
+solr_jmx_rmi_port: 50503
+solr_jmx_rmi_hostname: "{{ solr_host }}"
+solr_jmx_password_file: "{{ solr_home }}/password.file"
+solr_jmx_access_file: "{{ solr_home }}/access.file"
+jmx_vars:
+  - solr_jmx_local_only
+  - solr_jmx_ssl
+  - solr_jmx_authenticate
+  - solr_jmx_port
+  - solr_jmx_rmi_port
+  - solr_jmx_rmi_hostname
+  - solr_jmx_password_file
+  - solr_jmx_access_file
+# aggregate jmx opts for templating
+solr_jmx_opts: "SOLR_OPTS=$SOLR_OPTS -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.only={{ solr_jmx_local_only }} -Dcom.sun.management.jmxremote.ssl={{ solr_jmx_ssl }} -Dcom.sun.management.jmxremote.authenticate={{ solr_jmx_authenticate }} -Dcom.sun.management.jmxremote.port={{ solr_jmx_port }} -Dcom.sun.management.jmxremote.rmi.port={{ solr_jmx_rmi_port }} -Dcom.sun.management.jmxremote.access.file={{ solr_jmx_access_file }} -Dcom.sun.management.jmxremote.password.file={{ solr_jmx_password_file }} -Djava.rmi.server.hostname={{ solr_jmx_rmi_hostname }}"

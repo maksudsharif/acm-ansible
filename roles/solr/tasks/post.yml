@@ -2,6 +2,11 @@
 ---
 - name: Run post-installation tasks
   block:
+    - name: Start {{ solr_service_name }}
+      shell: "service {{ solr_service_name }} start"
+      become: yes
+      become_user: root
+      
     - name: Check Solr {{ solr_version }} PID
       shell: "cat {{ solr_home }}/bin/solr-{{ solr_port }}.pid | awk '{if(NR<2)print}'"
       register: solr_pid

@@ -1,0 +1,34 @@
+# Configure JMX
+---
+- name: Check if 'jmx' ran previously...
+  stat:
+    path: "/root/{{ solr_service_name }}/solr7-jmx.txt"
+  register: jmx_step
+  become: yes
+  become_user: root
+
+- name: Copy JMX access and password
+  block: 
+    - name: Copy access file
+      become: yes
+      become_user: "{{ solr_user }}"
+      copy:
+        src: access.file
+        dest: "{{ solr_home }}"
+        owner: "{{ solr_user }}"
+        group: "{{ solr_group }}"
+        mode: 0644
+      creates: "{{ solr_home }}/access.file"
+
+    - name: Copy password file
+      become: yes
+      become_user: "{{ solr_user }}"
+      copy:
+        src: password.file
+        dest: "{{ solr_home }}"
+        owner: "{{ solr_user }}"
+        group: "{{ solr_group }}"
+        mode: 0600
+      creates: "{{ solr_home }}/password.file"
+
+  when: jmx_step.stat.exists == False and extract_step.stat.exists == True

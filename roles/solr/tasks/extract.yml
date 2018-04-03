@@ -46,11 +46,11 @@
       become: yes
       become_user: root
 
-    - name: Update extract step...
+    - name: Update extraction step...
       stat:
         path: "/root/{{ solr_service_name }}/solr7-extract.txt"
       register: extract_step
       become: yes
       become_user: root
-
+        
   when: extract_step.stat.exists == False
