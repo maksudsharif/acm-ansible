@@ -17,7 +17,7 @@
 - assert: { that: "java_version.stdout | version_compare('1.8', '>=')", msg: "Java must be present before being able to install Solr" }
 
 # Uninstall old version of Solr
-- include: uninstall.yml
+- include_tasks: uninstall.yml
   debug: { msg: "Uninstalling Solr {{ solr_version }}" }
   when: solr_uninstall_old == true and not((item is undefined) or (item is none) or (item | trim == ''))
   with_items:
