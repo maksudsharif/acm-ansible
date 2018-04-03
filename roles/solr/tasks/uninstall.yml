@@ -10,7 +10,7 @@
 - name: Uninstall Solr {{ solr_version_old }}
   block: 
     - set_fact:
-        solr_version_le6: "{{ solr_version_old | version_compare('6', >=) }}"
+        solr_version_le6: "{{ solr_version_old | version_compare('6', '>=') }}"
     
     - name: Check if Solr {{ solr_version_old }} service exists in /etc/init.d
       stat:

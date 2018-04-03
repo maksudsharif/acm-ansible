@@ -17,10 +17,14 @@
 - assert: { that: "java_version.stdout | version_compare('1.8', '>=')", msg: "Java must be present before being able to install Solr" }
 
 # Uninstall old version of Solr
-- include_tasks: uninstall.yml
+# Validate uninstall properties
+- fail:
+    msg: "Uninstall is requested, but variable '{{ item }}': {{ item }} is not defined or empty"
   when: solr_uninstall_old == true and not((item is undefined) or (item is none) or (item | trim == ''))
-  with_items:
-    - "{{ uninstall_vars }}"
+  with_items: "{{ uninstall_vars }}"
+
+- include_tasks: uninstall.yml
+  when: solr_uninstall_old == true
 
 # Ensure no Solr of the same version exists
 - name: Check if the version of Solr already exists
