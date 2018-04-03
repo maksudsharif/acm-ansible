@@ -121,7 +121,7 @@
     - name: Remove old exposed Solr Port {{ solr_port_old }}
       become: yes
       become_user: root
-      command: "firewall-cmd --remove-port={{ solr_port_old }}/tcp --permanent --zone={{ firewall_default_zone }}"
+      command: "firewall-cmd --remove-port={{ solr_port_old }}/tcp --permanent --zone={{ firewall_default_zone }} && firewall-cmd --reload"
 
     - name: Delete old installation status
       file:
