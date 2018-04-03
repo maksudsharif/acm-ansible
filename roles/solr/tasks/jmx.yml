@@ -32,8 +32,8 @@
         creates: "{{ solr_home }}/password.file"
 
     - name: Write jmx step
-          shell: "mkdir -p /root/{{ solr_service_name }} && echo solr7-jmx > /root/{{ solr_service_name }}/solr7-jmx.txt"
-          become: yes
-          become_user: root
+      shell: "mkdir -p /root/{{ solr_service_name }} && echo solr7-jmx > /root/{{ solr_service_name }}/solr7-jmx.txt"
+      become: yes
+      become_user: root
 
   when: jmx_step.stat.exists == False and extract_step.stat.exists == True
