@@ -81,5 +81,3 @@ jmx_vars:
   - solr_jmx_rmi_hostname
   - solr_jmx_password_file
   - solr_jmx_access_file
-# aggregate jmx opts for templating
-solr_jmx_opts: "{{ lookup('template', 'jmx.j2') }}"

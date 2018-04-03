@@ -86,7 +86,11 @@ SOLR_OPTS="$SOLR_OPTS -DSTOP.KEY={{ solr_stop_key | default('solrrocks') }}"
 SOLR_OPTS="$SOLR_OPTS -DSTOP.PORT={{ solr_stop_port | default(solr_port) }}"
 
 # JAVA RMI Settings (Do not use built in Solr JMX settings as they do not allow authentication)
-{{ solr_jmx_enabled == 'true' | ternary(solr_jmx_opts, "# JMX Not enabled") }}
+{% if solr_jmx_enabled == 'true' %}
+SOLR_OPTS="$SOLR_OPTS -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.only={{ solr_jmx_local_only == 'true' | ternary('true', 'false') }} -Dcom.sun.management.jmxremote.ssl={{ solr_jmx_ssl == 'true' | ternary('true', 'false') }} -Dcom.sun.management.jmxremote.authenticate={{ solr_jmx_authenticate == 'true' | ternary('true', 'false') }} -Dcom.sun.management.jmxremote.port={{ solr_jmx_port }} -Dcom.sun.management.jmxremote.rmi.port={{ solr_jmx_rmi_port }} -Dcom.sun.management.jmxremote.access.file={{ solr_jmx_access_file }} -Dcom.sun.management.jmxremote.password.file={{ solr_jmx_password_file }} -Djava.rmi.server.hostname={{ solr_jmx_rmi_hostname }}"
+{% else %}
+# Not enabled
+{% endif %}
 
 # Location where the bin/solr script will save PID files for running instances
 # If not set, the script will create PID files in $SOLR_TIP/bin
