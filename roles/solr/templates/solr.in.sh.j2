@@ -81,10 +81,6 @@ SOLR_OPTS="$SOLR_OPTS -Dsolr.autoSoftCommit.maxTime=1000"
 #SOLR_OPTS="$SOLR_OPTS -Dsolr.autoCommit.maxTime=60000"
 #SOLR_OPTS="$SOLR_OPTS -Dsolr.clustering.enabled=true"
 
-# Solr Stop Settings
-SOLR_OPTS="$SOLR_OPTS -DSTOP.KEY={{ solr_stop_key | default('solrrocks') }}"
-SOLR_OPTS="$SOLR_OPTS -DSTOP.PORT={{ solr_stop_port | default(solr_port) }}"
-
 # JAVA RMI Settings (Do not use built in Solr JMX settings as they do not allow authentication)
 {% if solr_jmx_enabled == true %}
 SOLR_OPTS="$SOLR_OPTS -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.only={{ (solr_jmx_local_only | bool) | ternary('true', 'false') }} -Dcom.sun.management.jmxremote.ssl={{ (solr_jmx_ssl | bool) | ternary('true', 'false') }} -Dcom.sun.management.jmxremote.authenticate={{ (solr_jmx_authenticate | bool) | ternary('true', 'false') }} -Dcom.sun.management.jmxremote.port={{ solr_jmx_port }} -Dcom.sun.management.jmxremote.rmi.port={{ solr_jmx_rmi_port }} -Dcom.sun.management.jmxremote.access.file={{ solr_jmx_access_file }} -Dcom.sun.management.jmxremote.password.file={{ solr_jmx_password_file }} -Djava.rmi.server.hostname={{ solr_jmx_rmi_hostname }}"

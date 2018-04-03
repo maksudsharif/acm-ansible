@@ -25,8 +25,6 @@ uninstall_vars:
 
 solr_host: localhost
 solr_port: 8983
-solr_stop_port: 8079
-solr_stop_key: gdead
 solr_service_name: solr
 solr_user: webuser
 solr_group: webuser
