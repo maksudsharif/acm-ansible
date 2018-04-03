@@ -17,10 +17,13 @@
 - assert: { that: "java_version.stdout | version_compare('1.8', '>=')", msg: "Java must be present before being able to install Solr" }
 
 # Uninstall old version of Solr
-# Validate uninstall properties
+- debug:
+    msg: "{{ item }} => Failed validation? : {{ solr_uninstall_old == true and not(item is undefined or item is none or (item | trim == '')) }}"
+  with_items: "{{ uninstall_vars }}"
+
 - fail:
-    msg: "Uninstall is requested, but variable '{{ item }}': {{ item }} is not defined or empty"
-  when: solr_uninstall_old == true and (item is undefined or item is none or (item | trim == ''))
+    msg: "Uninstall is requested, but variable '{{ item }}' is not defined or empty"
+  when: solr_uninstall_old == true and not(item is undefined or item is none or (item | trim == ''))
   with_items: "{{ uninstall_vars }}"
 
 - fail:
@@ -29,18 +32,22 @@
 
 # Validate SSL properties
 - debug:
-    var: ssl_vars
+    msg: "{{ item }} => Failed validation? : {{ solr_ssl_enabled == true and not(item is undefined or item is none or (item | trim == '')) }}"
+  with_items: "{{ ssl_vars }}"
+
 - fail:
     msg: "SSL is enabled, but variable '{{ item }}' is not defined or empty"
-  when: solr_ssl_enabled == true and (item is undefined or item is none or (item | trim == ''))
+  when: solr_ssl_enabled == true and not(item is undefined or item is none or (item | trim == ''))
   with_items: "{{ ssl_vars }}"
 
 # Validate JMX properties
 - debug:
-    var: jmx_vars
+    msg: "{{ item }} => Failed validation? : {{ solr_jmx_enabled == true and not( item is undefined or item is none or (item | trim == '')) }}"
+  with_items: "{{ jmx_vars }}"
+
 - fail:
     msg: "JMX is enabled, but variable '{{ item }}' is not defined or empty"
-  when: solr_jmx_enabled == true and (item is undefined or item is none or (item | trim == ''))
+  when: solr_jmx_enabled == true and not(item is undefined or item is none or (item | trim == ''))
   with_items: "{{ jmx_vars }}"
 
 - include_tasks: uninstall.yml
