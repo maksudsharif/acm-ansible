@@ -23,7 +23,7 @@
 
 - fail:
     msg: "Uninstall is requested, but variable '{{ item }}' is not defined or empty"
-  when: solr_uninstall_old == true and not(item is undefined or item is none or (item | trim == ''))
+  when: solr_uninstall_old == true and (vars[item] is undefined or vars[item] is none or (vars[item] | trim == ''))
   with_items: "{{ uninstall_vars }}"
 
 - fail:
@@ -37,7 +37,7 @@
 
 - fail:
     msg: "SSL is enabled, but variable '{{ item }}' is not defined or empty"
-  when: solr_ssl_enabled == true and not(item is undefined or item is none or (item | trim == ''))
+  when: solr_ssl_enabled == true and (vars[item] is undefined or vars[item] is none or (vars[item] | trim == ''))
   with_items: "{{ ssl_vars }}"
 
 # Validate JMX properties
@@ -47,7 +47,7 @@
 
 - fail:
     msg: "JMX is enabled, but variable '{{ item }}' is not defined or empty"
-  when: solr_jmx_enabled == true and not(item is undefined or item is none or (item | trim == ''))
+  when: solr_jmx_enabled == true and (vars[item] is undefined or vars[item] is none or (vars[item] | trim == ''))
   with_items: "{{ jmx_vars }}"
 
 - include_tasks: uninstall.yml
